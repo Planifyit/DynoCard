@@ -5,6 +5,9 @@
             :host {
                 --card-bg-color: #ffffff;
                 --card-border-color: #e0e0e0;
+                /* Add selected color back */
+                --selected-card-bg-color: #e8f0fe; 
+                --selected-card-border-color: #1a73e8;
                 --card-title-color: #333333;
                 --card-text-color: #555555;
             }
@@ -69,20 +72,26 @@
                 border-radius: 8px;
                 padding: 12px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                transition: box-shadow 0.3s, border-color 0.3s;
+                transition: box-shadow 0.3s, border-color 0.3s, background-color 0.3s;
                 word-wrap: break-word;
                 position: relative;
                 padding-left: 50px; /* Space for the icon */
                 padding-right: 40px; /* Space for buttons */
-                cursor: default;
-                min-height: 40px; /* Ensure card has height */
+                cursor: pointer; /* Make card clickable again */
+                min-height: 40px;
             }
 
             .card:hover {
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
+            
+            /* Add selected style back */
+            .card.selected {
+                background-color: var(--selected-card-bg-color);
+                border-color: var(--selected-card-border-color);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
 
-            /* New Card Icon */
             .card-icon {
                 position: absolute;
                 top: 12px;
@@ -233,7 +242,9 @@
             this._cardData = [];
             this._dataStructure = [];
             this._cardLayout = [];
-            this._cardIcon = {}; // For the new icon
+            this._cardIcon = {};
+            this._selectedIndices = []; // Re-add selection state
+            this._selectedData = [];    // Re-add selection state
             this._dynamicButtons = []; 
             this._initialized = false;
             this._lastClickedButtonId = null;
@@ -245,29 +256,22 @@
             this._cardContainer = this._shadowRoot.getElementById('cardContainer');
             this._paginationControls = this._shadowRoot.getElementById('paginationControls');
             this._headerTitle = this._shadowRoot.getElementById('widgetHeaderTitle');
+            // No multi-select buttons
         }
 
         // --- Symbol Logic ---
         
         _getSymbols() {
-            return [
+             return [
                 { value: 'folder', label: '📁 Folder' },
-                { value: 'check', label: '✓ Check' },
-                { value: 'x', label: '✕ X' },
-                { value: 'arrow-up', label: '↑ Arrow Up' },
-                { value: 'arrow-down', label: '↓ Arrow Down' },
-                { value: 'minus', label: '- Minus' },
-                { value: 'plus', label: '+ Plus' },
-                { value: 'bell', label: '🔔 Bell' },
-                { value: 'warning', label: '⚠ Warning' },
-                { value: 'info', label: 'ℹ Info' },
-                { value: 'flag', label: '⚑ Flag' },
-                { value: 'lock', label: '🔒 Lock' },
-                { value: 'calendar', label: '📅 Calendar' },
-                { value: 'search', label: '🔍 Search' },
-                { value: 'edit-pencil', label: '✏️ Edit' },
-                { value: 'change', label: '🔄 Change' },
-                { value: 'star', label: '⭐ Star' }
+                { value: 'check', label: '✓ Check' }, { value: 'x', label: '✕ X' },
+                { value: 'arrow-up', label: '↑ Arrow Up' }, { value: 'arrow-down', label: '↓ Arrow Down' },
+                { value: 'minus', label: '- Minus' }, { value: 'plus', label: '+ Plus' },
+                { value: 'bell', label: '🔔 Bell' }, { value: 'warning', label: '⚠ Warning' },
+                { value: 'info', label: 'ℹ Info' }, { value: 'flag', label: '⚑ Flag' },
+                { value: 'lock', label: '🔒 Lock' }, { value: 'calendar', label: '📅 Calendar' },
+                { value: 'search', label: '🔍 Search' }, { value: 'edit-pencil', label: '✏️ Edit' },
+                { value: 'change', label: '🔄 Change' }, { value: 'star', label: '⭐ Star' }
             ];
         }
 
@@ -285,6 +289,37 @@
             span.className = `symbol symbol-${symbolInfo.type}`;
             span.textContent = symbolInfo.symbol;
             return span;
+        }
+
+        // --- Selection Logic (Re-added for single selection) ---
+
+        _handleCardClick(originalIndex, dataObject) {
+            // Simple single selection logic
+            if (this._selectedIndices.includes(originalIndex)) {
+                this._selectedIndices = []; // Deselect if clicking the same card
+            } else {
+                this._selectedIndices = [originalIndex]; // Select the new card
+            }
+            
+            this._updateSelectedData(); // Update the selected data array
+            this._renderCards(); // Re-render to show selection visually
+            
+            // Fire events
+            this.dispatchEvent(new Event("onSelectionChanged"));
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: {
+                    properties: {
+                        selectedIndices: JSON.stringify(this._selectedIndices),
+                        selectedIndicesArray: this._selectedIndices,     
+                        selectedData: JSON.stringify(this._selectedData)
+                    }
+                }
+            }));
+        }
+
+        _updateSelectedData() {
+            // Map selected indices to their corresponding data objects
+            this._selectedData = this._selectedIndices.map(index => this._cardData[index]);
         }
 
         // --- Main Rendering Logic ---
@@ -320,14 +355,18 @@
                 const originalIndex = startIndex + i;
                 const card = document.createElement('div');
                 card.className = 'card';
+                // Add selected class if needed
+                if (this._selectedIndices.includes(originalIndex)) {
+                    card.classList.add('selected');
+                }
+                // Re-add click listener for selection
+                card.addEventListener('click', () => this._handleCardClick(originalIndex, dataObject));
 
-                // --- Add Static Card Icon ---
+                // Add Static Card Icon
                 if (iconConfig.symbol) {
                     const iconContainer = document.createElement('div');
                     iconContainer.className = 'card-icon';
-                    if (iconConfig.color) {
-                        iconContainer.style.color = iconConfig.color;
-                    }
+                    if (iconConfig.color) iconContainer.style.color = iconConfig.color;
                     iconContainer.appendChild(this._createSymbolElement({
                         type: iconConfig.symbol,
                         symbol: this._symbolMap[iconConfig.symbol] || '●'
@@ -335,22 +374,19 @@
                     card.appendChild(iconContainer);
                 }
 
-                // --- Add Card Content ---
+                // Add Card Content
                 const cardContent = document.createElement('div');
                 cardContent.className = 'card-content';
-
                 sortedLayout.forEach(rowConfig => {
                     const value = dataObject[rowConfig.dataKey] || '';
                     const rowEl = document.createElement('div');
                     rowEl.className = 'card-row';
-
                     switch (rowConfig.type) {
                         case 'Title':
                             rowEl.classList.add('card-row-title');
                             rowEl.textContent = value;
                             cardContent.appendChild(rowEl);
                             break;
-                        
                         case 'Text':
                             rowEl.classList.add('card-row-text');
                             rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`;
@@ -361,10 +397,9 @@
                 });
                 card.appendChild(cardContent);
 
-                // --- Add Dynamic Buttons to Card ---
+                // Add Dynamic Buttons to Card
                 const cardButtonsContainer = document.createElement('div');
                 cardButtonsContainer.className = 'card-buttons-container';
-                
                 if (Array.isArray(buttonsConfig) && buttonsConfig.length > 0) {
                     buttonsConfig.forEach(buttonConfig => {
                         if (buttonConfig.id && buttonConfig.visibility !== 'hidden') {
@@ -372,32 +407,19 @@
                             button.className = 'dynamic-button';
                             button.title = buttonConfig.tooltip || buttonConfig.id;
                             button.textContent = this._symbolMap[buttonConfig.symbol] || '●';
-                            
                             if (buttonConfig.backgroundColor && buttonConfig.backgroundColor.trim() !== '') {
                                 button.style.backgroundColor = buttonConfig.backgroundColor;
                                 button.style.color = '#ffffff'; 
                             }
-        
                             button.addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 this._lastClickedButtonId = buttonConfig.id;
                                 this.lastClickedButtonId = buttonConfig.id;
-                                
                                 this.dispatchEvent(new CustomEvent("onCustomButtonClicked", {
-                                    detail: {
-                                        buttonId: buttonConfig.id,
-                                        buttonConfig: buttonConfig,
-                                        originalIndex: originalIndex,
-                                        dataObject: dataObject
-                                    }
+                                    detail: { buttonId: buttonConfig.id, buttonConfig: buttonConfig, originalIndex: originalIndex, dataObject: dataObject }
                                 }));
-                                
                                 this.dispatchEvent(new CustomEvent("propertiesChanged", {
-                                    detail: {
-                                        properties: {
-                                            lastClickedButtonId: buttonConfig.id
-                                        }
-                                    }
+                                    detail: { properties: { lastClickedButtonId: buttonConfig.id } }
                                 }));
                             });
                             cardButtonsContainer.appendChild(button);
@@ -405,8 +427,7 @@
                     });
                 }
                 card.appendChild(cardButtonsContainer);
-                // --- End of Button Logic ---
-
+                
                 this._cardContainer.appendChild(card);
             });
         }
@@ -465,6 +486,9 @@
                 if (this.hasAttribute("headerTitle")) {
                     this._headerTitle.textContent = this.getAttribute("headerTitle");
                 }
+                 if (this.hasAttribute("selectedIndices")) { // Load initial selection
+                    try { this._selectedIndices = JSON.parse(this.getAttribute("selectedIndices")); } catch (e) {}
+                }
                 
                 if (this.cardDataBinding) {
                     this._updateDataBinding(this.cardDataBinding);
@@ -486,42 +510,18 @@
                 const columns = [];
                 const dims = dataBinding.metadata && dataBinding.metadata.dimensions;
                 if (dims && typeof dims === "object" && !Array.isArray(dims)) {
-                    Object.keys(dims).forEach(dimKey => {
-                        const dimMeta = dims[dimKey];
-                        columns.push({
-                            name: dimKey,
-                            label: dimMeta.description || dimMeta.label || dimMeta.id
-                        });
-                    });
+                    Object.keys(dims).forEach(dimKey => columns.push({ name: dimKey, label: dims[dimKey].description || dims[dimKey].label || dims[dimKey].id }));
                 }
                  const measures = dataBinding.metadata && dataBinding.metadata.mainStructureMembers;
                 if (measures && typeof measures === "object" && !Array.isArray(measures)) {
-                    Object.keys(measures).forEach(measKey => {
-                        const measMeta = measures[measKey];
-                        columns.push({
-                            name: measKey,
-                            label: measMeta.label || measMeta.id
-                        });
-                    });
+                    Object.keys(measures).forEach(measKey => columns.push({ name: measKey, label: measures[measKey].label || measures[measKey].id }));
                 }
 
                 const cardData = dataBinding.data.map((row) => {
                     const transformedRow = {};
                     columns.forEach(col => {
                         let cellObj = row[col.name];
-                        if (!cellObj) {
-                            transformedRow[col.name] = "";
-                        } else if (cellObj.label) {
-                            transformedRow[col.name] = cellObj.label;
-                        } else if (cellObj.formattedValue) {
-                            transformedRow[col.name] = cellObj.formattedValue;
-                        } else if (cellObj.formatted) {
-                            transformedRow[col.name] = cellObj.formatted;
-                        } else if (cellObj.raw !== undefined) {
-                            transformedRow[col.name] = cellObj.raw;
-                        } else {
-                            transformedRow[col.name] = "";
-                        }
+                        transformedRow[col.name] = cellObj ? (cellObj.label || cellObj.formattedValue || cellObj.formatted || cellObj.raw || "") : "";
                     });
                     return transformedRow;
                 });
@@ -529,6 +529,8 @@
                 this._dataStructure = columns;
                 this._cardData = cardData;
                 this._currentPage = 1;
+                 this._selectedIndices = []; // Clear selection on new data
+                 this._updateSelectedData();
                 this._renderWidget();
             }
         }
@@ -542,22 +544,20 @@
                 try {
                     this._cardData = JSON.parse(changedProperties.cardData);
                     this._currentPage = 1;
+                    this._selectedIndices = [];
+                    this._updateSelectedData();
                     this._renderWidget();
                 } catch (e) {}
             }
 
             if ('cardIcon' in changedProperties) {
-                try {
-                    this._cardIcon = JSON.parse(changedProperties.cardIcon);
-                    this._renderWidget();
-                } catch (e) { this._cardIcon = {}; }
+                try { this._cardIcon = JSON.parse(changedProperties.cardIcon); } catch (e) { this._cardIcon = {}; }
+                this._renderWidget();
             }
 
             if ('cardLayout' in changedProperties) {
-                try {
-                    this._cardLayout = JSON.parse(changedProperties.cardLayout);
-                    this._renderWidget();
-                } catch (e) {}
+                try { this._cardLayout = JSON.parse(changedProperties.cardLayout); } catch (e) {}
+                this._renderWidget();
             }
 
             if ('cardsPerPage' in changedProperties) {
@@ -567,117 +567,94 @@
             }
             
             if ('dynamicButtons' in changedProperties) {
-                try {
-                    this._dynamicButtons = typeof changedProperties.dynamicButtons === 'string' ? 
-                        JSON.parse(changedProperties.dynamicButtons) : changedProperties.dynamicButtons;
-                    this._renderWidget();
-                } catch (e) {}
+                try { this._dynamicButtons = typeof changedProperties.dynamicButtons === 'string' ? JSON.parse(changedProperties.dynamicButtons) : changedProperties.dynamicButtons; } catch (e) {}
+                this._renderWidget();
             }
             
             if ('headerTitle' in changedProperties) {
                 this._headerTitle.textContent = changedProperties.headerTitle;
             }
 
+            if ('selectedIndices' in changedProperties) { // Handle external selection changes
+                try {
+                    this._selectedIndices = JSON.parse(changedProperties.selectedIndices);
+                    this._updateSelectedData();
+                    this._renderWidget(); // Re-render to show external selection
+                } catch (e) { console.error('Invalid selectedIndices property:', e); }
+            }
+
             const hostStyle = this._shadowRoot.host.style;
-            if ('cardBackgroundColor' in changedProperties) {
-                hostStyle.setProperty('--card-bg-color', changedProperties.cardBackgroundColor);
-            }
-            if ('cardBorderColor' in changedProperties) {
-                hostStyle.setProperty('--card-border-color', changedProperties.cardBorderColor);
-            }
-            if ('cardTitleColor' in changedProperties) {
-                hostStyle.setProperty('--card-title-color', changedProperties.cardTitleColor);
-            }
-            if ('cardTextColor' in changedProperties) {
-                hostStyle.setProperty('--card-text-color', changedProperties.cardTextColor);
-            }
+            if ('cardBackgroundColor' in changedProperties) hostStyle.setProperty('--card-bg-color', changedProperties.cardBackgroundColor);
+            if ('cardBorderColor' in changedProperties) hostStyle.setProperty('--card-border-color', changedProperties.cardBorderColor);
+            if ('selectedCardColor' in changedProperties) hostStyle.setProperty('--selected-card-bg-color', changedProperties.selectedCardColor); // Re-add
+            if ('cardTitleColor' in changedProperties) hostStyle.setProperty('--card-title-color', changedProperties.cardTitleColor);
+            if ('cardTextColor' in changedProperties) hostStyle.setProperty('--card-text-color', changedProperties.cardTextColor);
         }
 
         // --- Public Getters/Setters ---
 
-        get dynamicButtons() {
-            return typeof this._dynamicButtons === 'string' ? 
-                this._dynamicButtons : JSON.stringify(this._dynamicButtons);
-        }
+        get dynamicButtons() { return typeof this._dynamicButtons === 'string' ? this._dynamicButtons : JSON.stringify(this._dynamicButtons); }
         set dynamicButtons(value) {
-            try {
-                this._dynamicButtons = typeof value === 'string' ? JSON.parse(value) : value;
-                this._renderWidget();
-            } catch (e) {}
+            try { this._dynamicButtons = typeof value === 'string' ? JSON.parse(value) : value; } catch (e) {}
+            this._renderWidget();
         }
 
-        get lastClickedButtonId() {
-            return this._lastClickedButtonId || '';
-        }
+        get lastClickedButtonId() { return this._lastClickedButtonId || ''; }
         set lastClickedButtonId(value) {
             this._lastClickedButtonId = value;
-            this.dispatchEvent(new CustomEvent("propertiesChanged", {
-                detail: { properties: { lastClickedButtonId: value } }
-            }));
+            this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { lastClickedButtonId: value } } }));
         }
 
         getButtonVisibility(buttonId) {
           const button = (this._dynamicButtons || []).find(btn => btn.id === buttonId);
           return button ? button.visibility : "";
         }
-
         setButtonVisibility(buttonId, visibility) {
             if (visibility !== 'visible' && visibility !== 'hidden') return;
             let buttons = [...this._dynamicButtons];
             let buttonFound = false;
-            for (let i = 0; i < buttons.length; i++) {
-                if (buttons[i].id === buttonId) {
-                    buttons[i].visibility = visibility;
-                    buttonFound = true;
-                    break;
-                }
-            }
+            for (let i = 0; i < buttons.length; i++) { if (buttons[i].id === buttonId) { buttons[i].visibility = visibility; buttonFound = true; break; } }
             if (!buttonFound) return;
             this.dynamicButtons = JSON.stringify(buttons);
-            this.dispatchEvent(new CustomEvent("propertiesChanged", {
-                detail: { properties: { dynamicButtons: JSON.stringify(buttons) } }
-            }));
+            this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { dynamicButtons: JSON.stringify(buttons) } } }));
         }
 
         getCardDataValue(key, originalIndex) {
-            if (!this._cardData || this._cardData.length === 0) return "";
-            if (originalIndex < 0 || originalIndex >= this._cardData.length) return "";
-
-            try {
-                const dataObject = this._cardData[originalIndex];
-                if (dataObject && dataObject[key] != null) {
-                    return String(dataObject[key]);
-                }
-            } catch (e) {
-                console.error("Error in getCardDataValue:", e);
+            if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return "";
+            try { const dataObject = this._cardData[originalIndex]; return (dataObject && dataObject[key] != null) ? String(dataObject[key]) : ""; } 
+            catch (e) { console.error("Error in getCardDataValue:", e); return ""; }
+        }
+        
+        // Re-added method
+        getSelectedDataValue(key) {
+            if (!this._selectedData || this._selectedData.length === 0) return "";
+            // Assumes single selection, takes the first selected item
+            const selectedObject = this._selectedData[0]; 
+             if (selectedObject && selectedObject[key] != null) {
+                return String(selectedObject[key]);
             }
             return "";
         }
 
-        setCardDataValue(originalIndex, dataKey, newValue) {
-            if (!this._cardData || this._cardData.length === 0) return;
-            if (originalIndex < 0 || originalIndex >= this._cardData.length) return;
 
-            try {
-                const dataObject = this._cardData[originalIndex];
-                if (dataObject) {
-                    dataObject[dataKey] = newValue;
-                    this._renderWidget(); 
-                }
-            } catch (e) {
-                console.error("Error in setCardDataValue:", e);
-            }
+        setCardDataValue(originalIndex, dataKey, newValue) {
+            if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return;
+            try { const dataObject = this._cardData[originalIndex]; if (dataObject) { dataObject[dataKey] = newValue; this._updateSelectedData(); this._renderWidget(); } } 
+            catch (e) { console.error("Error in setCardDataValue:", e); }
         }
    
-        get cardData() {
-            return JSON.stringify(this._cardData);
-        }
+        get cardData() { return JSON.stringify(this._cardData); }
         set cardData(value) {
-            try {
-                this._cardData = JSON.parse(value);
-                this._currentPage = 1;
-                this._renderWidget();
-            } catch (e) {}
+            try { this._cardData = JSON.parse(value); this._currentPage = 1; this._selectedIndices = []; this._updateSelectedData(); this._renderWidget(); } 
+            catch (e) {}
+        }
+        
+        // Re-added getters/setters
+        get selectedIndices() { return JSON.stringify(this._selectedIndices); }
+        get selectedData() { return JSON.stringify(this._selectedData); }
+        set selectedIndices(value) {
+            try { this._selectedIndices = JSON.parse(value); this._updateSelectedData(); this._renderWidget(); } 
+            catch (e) {}
         }
     }
     customElements.define('simple-card-widget', SimpleCardWidget);
