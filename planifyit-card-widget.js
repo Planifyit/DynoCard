@@ -796,7 +796,22 @@
           return "";
         }
 
-        // --- UPDATED METHOD ---
+        // --- NEW METHOD ---
+        getCardDataValue(key, originalIndex) {
+            if (!this._cardData || this._cardData.length === 0) return "";
+            if (originalIndex < 0 || originalIndex >= this._cardData.length) return "";
+
+            try {
+                const dataObject = this._cardData[originalIndex];
+                if (dataObject && dataObject[key] != null) {
+                    return String(dataObject[key]);
+                }
+            } catch (e) {
+                console.error("Error in getCardDataValue:", e);
+            }
+            return "";
+        }
+
         setCardDataValue(originalIndex, dataKey, newValue) {
             if (!this._cardData || this._cardData.length === 0) return;
             if (originalIndex < 0 || originalIndex >= this._cardData.length) return;
@@ -806,15 +821,9 @@
                 if (dataObject) {
                     dataObject[dataKey] = newValue;
                     
-                    // Update selectedData if this card was selected
                     this._updateSelectedData(); 
-                    
-                    // Re-render all cards to show the change
                     this._renderWidget(); 
 
-                    // Dispatch ONLY selectedData (if it changed) and
-                    // other properties that are not the main data source.
-                    // DO NOT dispatch 'cardData'.
                     this.dispatchEvent(new CustomEvent("propertiesChanged", {
                         detail: { 
                             properties: { 
