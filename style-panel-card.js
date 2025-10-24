@@ -29,6 +29,7 @@
                 padding: 5px;
                 border: 1px solid #ccc;
                 border-radius: 4px;
+                box-sizing: border-box;
             }
             input[type="color"] {
                 width: 40px;
@@ -36,7 +37,7 @@
                 padding: 0;
             }
             input[type="number"] {
-                width: 60px;
+                width: 70px;
             }
             select {
                 height: 30px;
@@ -48,42 +49,6 @@
             .color-input {
                 flex-grow: 1;
                 margin-right: 5px;
-            }
-            .card-row-config, .button-container {
-                margin-top: 15px;
-            }
-            .row-entry, .button-entry {
-                display: flex;
-                align-items: center;
-                margin-bottom: 8px;
-                gap: 8px;
-            }
-            .order-input, .label-input, .datakey-input {
-                flex-grow: 1;
-            }
-            .order-input {
-                width: 50px;
-                flex-grow: 0;
-            }
-            .symbol-select, .button-symbol-select {
-                flex-grow: 1;
-            }
-            .button-id-input, .button-tooltip-input {
-                flex-grow: 1;
-            }
-            .add-button, .remove-button {
-                background-color: #f0f0f0;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                cursor: pointer;
-                padding: 2px 8px;
-                font-size: 14px;
-            }
-            .add-button {
-                margin-top: 8px;
-            }
-            .remove-button {
-                background-color: #ffebee;
             }
             .apply-button {
                 background-color: #1a73e8;
@@ -97,38 +62,51 @@
             .apply-button:hover {
                 background-color: #1557b0;
             }
-            .move-buttons {
+            .card-layout-config, .button-container {
+                margin-top: 15px;
+            }
+            .card-row-entry, .button-entry {
                 display: flex;
                 flex-direction: column;
-                gap: 2px;
+                border: 1px solid #eee;
+                border-radius: 4px;
+                padding: 10px;
+                margin-bottom: 8px;
+                gap: 8px;
             }
-            .move-button {
-                background-color: #e0e0e0;
+            .card-row-grid, .button-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .full-width {
+                grid-column: 1 / -1;
+            }
+            .hidden-field {
+                display: none;
+            }
+            
+            .add-button, .remove-button {
+                background-color: #f0f0f0;
                 border: 1px solid #ccc;
-                border-radius: 3px;
+                border-radius: 4px;
                 cursor: pointer;
-                padding: 2px 6px;
-                font-size: 12px;
-                width: 24px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                padding: 2px 8px;
+                font-size: 14px;
+                width: fit-content;
             }
-            .move-button:hover {
-                background-color: #d0d0d0;
+            .add-button {
+                margin-top: 8px;
+            }
+            .remove-button {
+                background-color: #ffebee;
+                align-self: flex-end;
             }
         </style>
         <form id="form">
             <fieldset>
-                <legend>Text Content</legend>
+                <legend>General</legend>
                 <table>
-                    <tr>
-                        <td>Card Header Title</td>
-                        <td>
-                            <input id="style_header_title" type="text" placeholder="Enter header title">
-                        </td>
-                    </tr>
                     <tr>
                         <td>App Title</td>
                         <td>
@@ -142,68 +120,66 @@
                 <legend>Card Appearance</legend>
                 <table>
                     <tr>
-                        <td>Header Background Color</td>
+                        <td>Card Background</td>
                         <td class="color-row">
-                            <input id="style_header_color" type="text" class="color-input">
-                            <input id="style_header_color_picker" type="color">
+                            <input id="style_card_bg_color" type="text" class="color-input">
+                            <input id="style_card_bg_color_picker" type="color">
                         </td>
                     </tr>
                     <tr>
-                        <td>Header Text Color</td>
+                        <td>Card Border</td>
                         <td class="color-row">
-                            <input id="style_header_text_color" type="text" class="color-input">
-                            <input id="style_header_text_color_picker" type="color">
+                            <input id="style_card_border_color" type="text" class="color-input">
+                            <input id="style_card_border_color_picker" type="color">
                         </td>
                     </tr>
                     <tr>
-                        <td>Card Background Color</td>
-                        <td class="color-row">
-                            <input id="style_card_background_color" type="text" class="color-input">
-                            <input id="style_card_background_color_picker" type="color">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Card Hover Color</td>
-                        <td class="color-row">
-                            <input id="style_card_hover_color" type="text" class="color-input">
-                            <input id="style_card_hover_color_picker" type="color">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Selected Card Border Color</td>
+                        <td>Selected Card</td>
                         <td class="color-row">
                             <input id="style_selected_card_color" type="text" class="color-input">
                             <input id="style_selected_card_color_picker" type="color">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Card Title Color</td>
+                        <td class="color-row">
+                            <input id="style_card_title_color" type="text" class="color-input">
+                            <input id="style_card_title_color_picker" type="color">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Card Text Color</td>
+                        <td class="color-row">
+                            <input id="style_card_text_color" type="text" class="color-input">
+                            <input id="style_card_text_color_picker" type="color">
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+
+            <fieldset>
+                <legend>Pagination</legend>
+                <table>
+                    <tr>
+                        <td>Cards Per Page</td>
+                        <td>
+                            <input id="style_cards_per_page" type="number" min="1" max="100" value="10">
                         </td>
                     </tr>
                 </table>
             </fieldset>
             
             <fieldset>
-                <legend>Card Row Configuration</legend>
-                <div class="card-row-config" id="card_row_container">
-                    <!-- Card row entries will be added here dynamically -->
-                </div>
+                <legend>Card Layout</legend>
+                <div class="card-layout-config" id="card_layout_container">
+                    </div>
                 <button type="button" id="add_card_row" class="add-button">+ Add Card Row</button>
             </fieldset>
 
             <fieldset>
-                <legend>Pagination Settings</legend>
-                <table>
-                    <tr>
-                        <td>Cards Per Page</td>
-                        <td>
-                            <input id="style_cards_per_page" type="number" min="1" max="50" value="12">
-                        </td>
-                    </tr>
-                </table>
-            </fieldset>
-
-            <fieldset>
-                <legend>Create Buttons</legend>
+                <legend>Create Buttons (for each card)</legend>
                 <div class="button-container" id="button_container">
-                    <!-- Button entries will be added here dynamically -->
-                </div>
+                    </div>
                 <button type="button" id="add_button" class="add-button">+ Add Custom Button</button>
             </fieldset>
             
@@ -220,493 +196,349 @@
             
             this._form = this._shadowRoot.getElementById("form");
             
-            // Text inputs
-            this._headerTitleInput = this._shadowRoot.getElementById("style_header_title");
+            // General
             this._appTitleInput = this._shadowRoot.getElementById("style_app_title");
-            this._cardsPerPageInput = this._shadowRoot.getElementById("style_cards_per_page");
-            
-            // Color inputs
-            this._headerColorInput = this._shadowRoot.getElementById("style_header_color");
-            this._headerColorPicker = this._shadowRoot.getElementById("style_header_color_picker");
-            
-            this._headerTextColorInput = this._shadowRoot.getElementById("style_header_text_color");
-            this._headerTextColorPicker = this._shadowRoot.getElementById("style_header_text_color_picker");
-            
-            this._cardBackgroundColorInput = this._shadowRoot.getElementById("style_card_background_color");
-            this._cardBackgroundColorPicker = this._shadowRoot.getElementById("style_card_background_color_picker");
-            
-            this._cardHoverColorInput = this._shadowRoot.getElementById("style_card_hover_color");
-            this._cardHoverColorPicker = this._shadowRoot.getElementById("style_card_hover_color_picker");
-            
+
+            // Card Appearance
+            this._cardBgColorInput = this._shadowRoot.getElementById("style_card_bg_color");
+            this._cardBgColorPicker = this._shadowRoot.getElementById("style_card_bg_color_picker");
+            this._cardBorderColorInput = this._shadowRoot.getElementById("style_card_border_color");
+            this._cardBorderColorPicker = this._shadowRoot.getElementById("style_card_border_color_picker");
             this._selectedCardColorInput = this._shadowRoot.getElementById("style_selected_card_color");
             this._selectedCardColorPicker = this._shadowRoot.getElementById("style_selected_card_color_picker");
-            
-            // Card rows and buttons
-            this._cardRowContainer = this._shadowRoot.getElementById("card_row_container");
+            this._cardTitleColorInput = this._shadowRoot.getElementById("style_card_title_color");
+            this._cardTitleColorPicker = this._shadowRoot.getElementById("style_card_title_color_picker");
+            this._cardTextColorInput = this._shadowRoot.getElementById("style_card_text_color");
+            this._cardTextColorPicker = this._shadowRoot.getElementById("style_card_text_color_picker");
+
+            // Pagination
+            this._cardsPerPageInput = this._shadowRoot.getElementById("style_cards_per_page");
+
+            // Card Layout
+            this._cardLayoutContainer = this._shadowRoot.getElementById("card_layout_container");
             this._addCardRowButton = this._shadowRoot.getElementById("add_card_row");
-            
+
+            // Dynamic buttons
             this._buttonContainer = this._shadowRoot.getElementById("button_container");
             this._addButtonButton = this._shadowRoot.getElementById("add_button");
             
             this._applyButton = this._shadowRoot.getElementById("apply_styles");
             
-            this._cardRows = [];
+            this._cardLayout = [];
             this._dynamicButtons = [];
-            
+   
             this._connectColorPickers();
             
-            // Event listeners
             this._form.addEventListener("submit", this._submit.bind(this));
             this._applyButton.addEventListener("click", this._submit.bind(this));
             this._addCardRowButton.addEventListener("click", () => this._addCardRowEntry());
             this._addButtonButton.addEventListener("click", () => this._addButtonEntry());
             
-            // Add initial entries
             this._addCardRowEntry();
             this._addButtonEntry();
         }
         
         _connectColorPickers() {
-            this._headerColorPicker.addEventListener("input", () => {
-                this._headerColorInput.value = this._headerColorPicker.value;
-            });
-            this._headerColorInput.addEventListener("change", () => {
-                this._headerColorPicker.value = this._headerColorInput.value;
-            });
-            
-            this._headerTextColorPicker.addEventListener("input", () => {
-                this._headerTextColorInput.value = this._headerTextColorPicker.value;
-            });
-            this._headerTextColorInput.addEventListener("change", () => {
-                this._headerTextColorPicker.value = this._headerTextColorInput.value;
-            });
-            
-            this._cardBackgroundColorPicker.addEventListener("input", () => {
-                this._cardBackgroundColorInput.value = this._cardBackgroundColorPicker.value;
-            });
-            this._cardBackgroundColorInput.addEventListener("change", () => {
-                this._cardBackgroundColorPicker.value = this._cardBackgroundColorInput.value;
-            });
-            
-            this._cardHoverColorPicker.addEventListener("input", () => {
-                this._cardHoverColorInput.value = this._cardHoverColorPicker.value;
-            });
-            this._cardHoverColorInput.addEventListener("change", () => {
-                this._cardHoverColorPicker.value = this._cardHoverColorInput.value;
-            });
-            
-            this._selectedCardColorPicker.addEventListener("input", () => {
-                this._selectedCardColorInput.value = this._selectedCardColorPicker.value;
-            });
-            this._selectedCardColorInput.addEventListener("change", () => {
-                this._selectedCardColorPicker.value = this._selectedCardColorInput.value;
-            });
+            const connect = (textInput, pickerInput) => {
+                pickerInput.addEventListener("input", () => textInput.value = pickerInput.value);
+                textInput.addEventListener("change", () => pickerInput.value = textInput.value);
+            };
+            connect(this._cardBgColorInput, this._cardBgColorPicker);
+            connect(this._cardBorderColorInput, this._cardBorderColorPicker);
+            connect(this._selectedCardColorInput, this._selectedCardColorPicker);
+            connect(this._cardTitleColorInput, this._cardTitleColorPicker);
+            connect(this._cardTextColorInput, this._cardTextColorPicker);
         }
 
+        // --- Symbol List ---
         _getSymbols() {
             return [
-                { value: 'check', label: '✓ Check' },
-                { value: 'x', label: '✕ X' },
-                { value: 'arrow-up', label: '↑ Arrow Up' },
-                { value: 'arrow-down', label: '↓ Arrow Down' },
-                { value: 'minus', label: '- Minus' },
-                { value: 'plus', label: '+ Plus' },
-                { value: 'bell', label: '🔔 Bell' },
-                { value: 'warning', label: '⚠ Warning' },
-                { value: 'info', label: 'ℹ Info' },
-                { value: 'flag', label: '⚑ Flag' },
-                { value: 'lock', label: '🔒 Lock' },
-                { value: 'calendar', label: '📅 Calendar' },
-                { value: 'search', label: '🔍 Search' },
-                { value: 'edit-pencil', label: '✏️ Edit' },
-                { value: 'change', label: '🔄 Change' }
+                { value: 'check', label: '✓ Check' }, { value: 'x', label: '✕ X' },
+                { value: 'arrow-up', label: '↑ Arrow Up' }, { value: 'arrow-down', label: '↓ Arrow Down' },
+                { value: 'minus', label: '- Minus' }, { value: 'plus', label: '+ Plus' },
+                { value: 'bell', label: '🔔 Bell' }, { value: 'warning', label: '⚠ Warning' },
+                { value: 'info', label: 'ℹ Info' }, { value: 'flag', label: '⚑ Flag' },
+                { value: 'lock', label: '🔒 Lock' }, { value: 'calendar', label: '📅 Calendar' },
+                { value: 'search', label: '🔍 Search' }, { value: 'edit-pencil', label: '✏️ Edit' },
+                { value: 'change', label: '🔄 Change' }, { value: 'star', label: '⭐ Star' }
             ];
         }
 
-        _addCardRowEntry(order = '', label = '', symbol = '', dataKey = '') {
+        // --- Card Layout Configuration ---
+
+        _addCardRowEntry(config = {}) {
             const entry = document.createElement("div");
-            entry.className = "row-entry";
-            
-            const orderInput = document.createElement("input");
-            orderInput.type = "number";
-            orderInput.min = "0";
-            orderInput.className = "order-input";
-            orderInput.placeholder = "Order";
-            orderInput.value = order;
-            orderInput.title = "Display order";
-            
-            const labelInput = document.createElement("input");
-            labelInput.type = "text";
-            labelInput.className = "label-input";
-            labelInput.placeholder = "Row Label";
-            labelInput.value = label;
-            
-            const symbolSelect = document.createElement("select");
-            symbolSelect.className = "symbol-select";
-            
-            const noneOption = document.createElement("option");
-            noneOption.value = "";
-            noneOption.textContent = "No Symbol";
-            symbolSelect.appendChild(noneOption);
-            
-            const symbols = this._getSymbols();
-            symbols.forEach(sym => {
-                const option = document.createElement("option");
-                option.value = sym.value;
-                option.textContent = sym.label;
-                if (sym.value === symbol) {
-                    option.selected = true;
-                }
-                symbolSelect.appendChild(option);
-            });
-            
+            entry.className = "card-row-entry";
+
             const dataKeyInput = document.createElement("input");
             dataKeyInput.type = "text";
-            dataKeyInput.className = "datakey-input";
-            dataKeyInput.placeholder = "Data Key";
-            dataKeyInput.value = dataKey;
-            dataKeyInput.title = "Key to retrieve data from (e.g., dimensions_0)";
-            
-            const moveButtons = document.createElement("div");
-            moveButtons.className = "move-buttons";
-            
-            const moveUpButton = document.createElement("button");
-            moveUpButton.type = "button";
-            moveUpButton.className = "move-button";
-            moveUpButton.textContent = "▲";
-            moveUpButton.addEventListener("click", () => {
-                const parent = entry.parentNode;
-                const previous = entry.previousElementSibling;
-                if (previous) {
-                    parent.insertBefore(entry, previous);
-                    this._updateCardRowsState();
-                }
+            dataKeyInput.className = "card-data-key full-width";
+            dataKeyInput.placeholder = "Data Key (e.g., dimensions_0)";
+            dataKeyInput.value = config.dataKey || '';
+
+            const grid = document.createElement("div");
+            grid.className = "card-row-grid";
+
+            const labelInput = document.createElement("input");
+            labelInput.type = "text";
+            labelInput.className = "card-label";
+            labelInput.placeholder = "Display Label";
+            labelInput.value = config.label || '';
+
+            const rowTypeSelect = document.createElement("select");
+            rowTypeSelect.className = "card-row-type";
+            ['Title', 'Text', 'Symbol'].forEach(type => {
+                const option = document.createElement("option");
+                option.value = type;
+                option.textContent = type;
+                if (type === config.type) option.selected = true;
+                rowTypeSelect.appendChild(option);
             });
             
-            const moveDownButton = document.createElement("button");
-            moveDownButton.type = "button";
-            moveDownButton.className = "move-button";
-            moveDownButton.textContent = "▼";
-            moveDownButton.addEventListener("click", () => {
-                const parent = entry.parentNode;
-                const next = entry.nextElementSibling;
-                if (next) {
-                    parent.insertBefore(next, entry);
-                    this._updateCardRowsState();
-                }
+            const sortOrderInput = document.createElement("input");
+            sortOrderInput.type = "number";
+            sortOrderInput.className = "card-sort-order";
+            sortOrderInput.placeholder = "Order";
+            sortOrderInput.min = "1";
+            sortOrderInput.value = config.order || (this._cardLayoutContainer.children.length + 1);
+
+            const valueToMatchInput = document.createElement("input");
+            valueToMatchInput.type = "text";
+            valueToMatchInput.className = "card-value-match";
+            valueToMatchInput.placeholder = "Value to Match (for Symbol)";
+            valueToMatchInput.value = config.valueToMatch || '';
+            
+            const symbolSelect = document.createElement("select");
+            symbolSelect.className = "card-symbol-select";
+            this._getSymbols().forEach(symbol => {
+                const option = document.createElement("option");
+                option.value = symbol.value;
+                option.textContent = symbol.label;
+                if (symbol.value === config.symbol) option.selected = true;
+                symbolSelect.appendChild(option);
             });
-            
-            moveButtons.appendChild(moveUpButton);
-            moveButtons.appendChild(moveDownButton);
-            
+
+            const toggleSymbolFields = (type) => {
+                const isSymbol = (type === 'Symbol');
+                valueToMatchInput.classList.toggle('hidden-field', !isSymbol);
+                symbolSelect.classList.toggle('hidden-field', !isSymbol);
+                labelInput.classList.toggle('hidden-field', type === 'Title');
+            };
+            rowTypeSelect.addEventListener('change', (e) => toggleSymbolFields(e.target.value));
+            toggleSymbolFields(config.type || 'Title');
+
+
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "remove-button";
-            removeButton.textContent = "✕";
+            removeButton.textContent = "✕ Remove";
             removeButton.addEventListener("click", () => {
-                this._cardRowContainer.removeChild(entry);
-                this._updateCardRowsState();
+                this._cardLayoutContainer.removeChild(entry);
+                this._updateCardLayoutState();
             });
-            
-            entry.appendChild(orderInput);
-            entry.appendChild(labelInput);
-            entry.appendChild(symbolSelect);
+
             entry.appendChild(dataKeyInput);
-            entry.appendChild(moveButtons);
+            grid.appendChild(labelInput);
+            grid.appendChild(rowTypeSelect);
+            grid.appendChild(sortOrderInput);
+            grid.appendChild(valueToMatchInput);
+            grid.appendChild(symbolSelect);
+            entry.appendChild(grid);
             entry.appendChild(removeButton);
             
-            this._cardRowContainer.appendChild(entry);
+            this._cardLayoutContainer.appendChild(entry);
         }
 
-        _updateCardRowsState() {
-            this._cardRows = [];
-            const entries = this._cardRowContainer.querySelectorAll(".row-entry");
-            
-            entries.forEach((entry, index) => {
-                const orderInput = entry.querySelector(".order-input");
-                const labelInput = entry.querySelector(".label-input");
-                const symbolSelect = entry.querySelector(".symbol-select");
-                const dataKeyInput = entry.querySelector(".datakey-input");
-                
-                if (labelInput.value || dataKeyInput.value) {
-                    this._cardRows.push({
-                        order: orderInput.value ? parseInt(orderInput.value, 10) : index,
-                        label: labelInput.value || '',
-                        symbol: symbolSelect.value || '',
-                        dataKey: dataKeyInput.value || ''
+        _updateCardLayoutState() {
+            this._cardLayout = [];
+            const entries = this._cardLayoutContainer.querySelectorAll(".card-row-entry");
+            entries.forEach(entry => {
+                const dataKey = entry.querySelector(".card-data-key").value;
+                if (dataKey) {
+                    this._cardLayout.push({
+                        dataKey: dataKey,
+                        label: entry.querySelector(".card-label").value,
+                        type: entry.querySelector(".card-row-type").value,
+                        order: parseInt(entry.querySelector(".card-sort-order").value, 10) || 0,
+                        valueToMatch: entry.querySelector(".card-value-match").value,
+                        symbol: entry.querySelector(".card-symbol-select").value
                     });
                 }
             });
-            
-            return this._cardRows;
+            return this._cardLayout;
         }
 
+        // --- Button Configuration ---
+        
         _addButtonEntry(buttonId = '', tooltip = '', symbolType = 'info', visibility = 'visible', backgroundColor = '') {
             const entry = document.createElement("div");
             entry.className = "button-entry";
             
+            const grid = document.createElement("div");
+            grid.className = "button-grid";
+
             const buttonIdInput = document.createElement("input");
             buttonIdInput.type = "text";
             buttonIdInput.className = "button-id-input";
-            buttonIdInput.placeholder = "Button ID";
+            buttonIdInput.placeholder = "Button ID (Required)";
             buttonIdInput.value = buttonId;
             
             const tooltipInput = document.createElement("input");
             tooltipInput.type = "text";
             tooltipInput.className = "button-tooltip-input";
-            tooltipInput.placeholder = "Tooltip description";
+            tooltipInput.placeholder = "Tooltip";
             tooltipInput.value = tooltip;
 
             const visibilitySelect = document.createElement("select");
             visibilitySelect.className = "button-visibility-select";
-            
-            const visibilityOptions = [
-                { value: 'visible', label: 'Visible' },
-                { value: 'hidden', label: 'Hidden' }
-            ];
-            
-            visibilityOptions.forEach(option => {
-                const optionElement = document.createElement("option");
-                optionElement.value = option.value;
-                optionElement.textContent = option.label;
-                if (option.value === visibility) {
-                    optionElement.selected = true;
-                }
-                visibilitySelect.appendChild(optionElement);
+            ['visible', 'hidden'].forEach(val => {
+                const option = document.createElement("option");
+                option.value = val;
+                option.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+                if(val === visibility) option.selected = true;
+                visibilitySelect.appendChild(option);
             });
             
             const symbolSelect = document.createElement("select");
             symbolSelect.className = "button-symbol-select";
-            
-            const symbols = this._getSymbols();
-            symbols.forEach(symbol => {
+            this._getSymbols().forEach(symbol => {
                 const option = document.createElement("option");
                 option.value = symbol.value;
                 option.textContent = symbol.label;
-                if (symbol.value === symbolType) {
-                    option.selected = true;
-                }
+                if (symbol.value === symbolType) option.selected = true;
                 symbolSelect.appendChild(option);
             });
-            
-            const colorRow = document.createElement("div");
-            colorRow.className = "color-row";
 
+            const colorRow = document.createElement("div");
+            colorRow.className = "color-row full-width";
             const colorInput = document.createElement("input");
             colorInput.type = "text";
             colorInput.className = "button-color-input color-input";
-            colorInput.placeholder = "#RRGGBB";
+            colorInput.placeholder = "Background Color (Overrides default)";
             colorInput.value = backgroundColor || '';
-
             const colorPicker = document.createElement("input");
             colorPicker.type = "color";
-            colorPicker.className = "button-color-picker";
             colorPicker.value = backgroundColor || '#FFFFFF';
-
-            colorPicker.addEventListener("input", () => {
-                colorInput.value = colorPicker.value;
-            });
-            colorInput.addEventListener("change", () => {
-                colorPicker.value = colorInput.value;
-            });
-
+            colorPicker.addEventListener("input", () => colorInput.value = colorPicker.value);
+            colorInput.addEventListener("change", () => colorPicker.value = colorInput.value);
             colorRow.appendChild(colorInput);
             colorRow.appendChild(colorPicker);
-            
+
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "remove-button";
-            removeButton.textContent = "✕";
+            removeButton.textContent = "✕ Remove";
             removeButton.addEventListener("click", () => {
                 this._buttonContainer.removeChild(entry);
                 this._updateButtonsState();
             });
             
-            entry.appendChild(buttonIdInput);
-            entry.appendChild(tooltipInput);
-            entry.appendChild(symbolSelect);
-            entry.appendChild(visibilitySelect);
+            grid.appendChild(buttonIdInput);
+            grid.appendChild(tooltipInput);
+            grid.appendChild(symbolSelect);
+            grid.appendChild(visibilitySelect);
+            entry.appendChild(grid);
             entry.appendChild(colorRow);
             entry.appendChild(removeButton);
-            
             this._buttonContainer.appendChild(entry);
         }
 
         _updateButtonsState() {
             this._dynamicButtons = [];
             const entries = this._buttonContainer.querySelectorAll(".button-entry");
-            
             entries.forEach(entry => {
                 const buttonIdInput = entry.querySelector(".button-id-input");
-                const tooltipInput = entry.querySelector(".button-tooltip-input");
-                const symbolSelect = entry.querySelector(".button-symbol-select");
-                const visibilitySelect = entry.querySelector(".button-visibility-select");
-                const colorInput = entry.querySelector(".button-color-input");
-                
                 if (buttonIdInput.value) {
                     this._dynamicButtons.push({
                         id: buttonIdInput.value,
-                        tooltip: tooltipInput.value || '',
-                        symbol: symbolSelect.value,
-                        visibility: visibilitySelect.value,
-                        backgroundColor: colorInput.value || ''
+                        tooltip: entry.querySelector(".button-tooltip-input").value || '',
+                        symbol: entry.querySelector(".button-symbol-select").value,
+                        visibility: entry.querySelector(".button-visibility-select").value,
+                        backgroundColor: entry.querySelector(".button-color-input").value || ''
                     });
                 }
             });
-            
             return this._dynamicButtons;
         }
 
+        // --- Submit & Property Handlers ---
+
         _submit(e) {
             e.preventDefault();
-            
-            const cardRows = this._updateCardRowsState();
-            const dynamicButtons = this._updateButtonsState();
-
             this.dispatchEvent(new CustomEvent("propertiesChanged", {
                 detail: {
                     properties: {
-                        headerTitle: this.headerTitle,
                         appTitle: this.appTitle,
-                        headerColor: this.headerColor,
-                        headerTextColor: this.headerTextColor,
                         cardBackgroundColor: this.cardBackgroundColor,
-                        cardHoverColor: this.cardHoverColor,
+                        cardBorderColor: this.cardBorderColor,
                         selectedCardColor: this.selectedCardColor,
-                        cardsPerPage: parseInt(this._cardsPerPageInput.value, 10),
-                        cardRows: JSON.stringify(cardRows),
-                        dynamicButtons: JSON.stringify(dynamicButtons)
+                        cardTitleColor: this.cardTitleColor,
+                        cardTextColor: this.cardTextColor,
+                        cardsPerPage: this.cardsPerPage,
+                        cardLayout: JSON.stringify(this._updateCardLayoutState()),
+                        dynamicButtons: JSON.stringify(this._updateButtonsState())
                     }
                 }
             }));
         }
 
-        set cardRows(value) {
+        // --- Getters/Setters for Properties ---
+        
+        get appTitle() { return this._appTitleInput.value; }
+        set appTitle(value) { this._appTitleInput.value = value || ''; }
+        
+        get cardBackgroundColor() { return this._cardBgColorInput.value; }
+        set cardBackgroundColor(value) { this._cardBgColorInput.value = value; this._cardBgColorPicker.value = value; }
+        
+        get cardBorderColor() { return this._cardBorderColorInput.value; }
+        set cardBorderColor(value) { this._cardBorderColorInput.value = value; this._cardBorderColorPicker.value = value; }
+        
+        get selectedCardColor() { return this._selectedCardColorInput.value; }
+        set selectedCardColor(value) { this._selectedCardColorInput.value = value; this._selectedCardColorPicker.value = value; }
+        
+        get cardTitleColor() { return this._cardTitleColorInput.value; }
+        set cardTitleColor(value) { this._cardTitleColorInput.value = value; this._cardTitleColorPicker.value = value; }
+        
+        get cardTextColor() { return this._cardTextColorInput.value; }
+        set cardTextColor(value) { this._cardTextColorInput.value = value; this._cardTextColorPicker.value = value; }
+
+        get cardsPerPage() { return parseInt(this._cardsPerPageInput.value, 10) || 10; }
+        set cardsPerPage(value) { this._cardsPerPageInput.value = value || 10; }
+
+        get cardLayout() { return JSON.stringify(this._updateCardLayoutState()); }
+        set cardLayout(value) {
             try {
-                this._cardRowContainer.innerHTML = '';
-                const rows = JSON.parse(value);
-                
-                if (Array.isArray(rows) && rows.length > 0) {
-                    rows.forEach(row => {
-                        this._addCardRowEntry(
-                            row.order || '',
-                            row.label || '',
-                            row.symbol || '',
-                            row.dataKey || ''
-                        );
-                    });
+                this._cardLayoutContainer.innerHTML = '';
+                const layout = JSON.parse(value);
+                if (Array.isArray(layout) && layout.length > 0) {
+                    layout.forEach(config => this._addCardRowEntry(config));
                 } else {
                     this._addCardRowEntry();
                 }
-                
-                this._cardRows = rows;
+                this._cardLayout = layout;
             } catch (e) {
                 this._addCardRowEntry();
             }
         }
-        
-        get cardRows() {
-            return JSON.stringify(this._updateCardRowsState());
-        }
 
+        get dynamicButtons() { return JSON.stringify(this._updateButtonsState()); }
         set dynamicButtons(value) {
             try {
                 this._buttonContainer.innerHTML = '';
                 const buttons = JSON.parse(value);
-                
                 if (Array.isArray(buttons) && buttons.length > 0) {
-                    buttons.forEach(button => {
-                        this._addButtonEntry(
-                            button.id || '',
-                            button.tooltip || '',
-                            button.symbol || 'info',
-                            button.visibility || 'visible',
-                            button.backgroundColor || ''
-                        );
-                    });
+                    buttons.forEach(button => this._addButtonEntry(
+                        button.id, button.tooltip, button.symbol, button.visibility, button.backgroundColor
+                    ));
                 } else {
                     this._addButtonEntry();
                 }
-                
                 this._dynamicButtons = buttons;
             } catch (e) {
                 this._addButtonEntry();
             }
         }
-        
-        get dynamicButtons() {
-            return JSON.stringify(this._updateButtonsState());
-        }
-        
-        get headerTitle() {
-            return this._headerTitleInput.value;
-        }
-        
-        set headerTitle(value) {
-            this._headerTitleInput.value = value || '';
-        }
-        
-        get appTitle() {
-            return this._appTitleInput.value;
-        }
-        
-        set appTitle(value) {
-            this._appTitleInput.value = value || '';
-        }
-        
-        get headerColor() {
-            return this._headerColorInput.value;
-        }
-        
-        set headerColor(value) {
-            this._headerColorInput.value = value;
-            this._headerColorPicker.value = value;
-        }
-        
-        get headerTextColor() {
-            return this._headerTextColorInput.value;
-        }
-        
-        set headerTextColor(value) {
-            this._headerTextColorInput.value = value;
-            this._headerTextColorPicker.value = value;
-        }
-        
-        get cardBackgroundColor() {
-            return this._cardBackgroundColorInput.value;
-        }
-        
-        set cardBackgroundColor(value) {
-            this._cardBackgroundColorInput.value = value;
-            this._cardBackgroundColorPicker.value = value;
-        }
-        
-        get cardHoverColor() {
-            return this._cardHoverColorInput.value;
-        }
-        
-        set cardHoverColor(value) {
-            this._cardHoverColorInput.value = value;
-            this._cardHoverColorPicker.value = value;
-        }
-        
-        get selectedCardColor() {
-            return this._selectedCardColorInput.value;
-        }
-        
-        set selectedCardColor(value) {
-            this._selectedCardColorInput.value = value;
-            this._selectedCardColorPicker.value = value;
-        }
-
-        get cardsPerPage() {
-            return parseInt(this._cardsPerPageInput.value, 10);
-        }
-        
-        set cardsPerPage(value) {
-            this._cardsPerPageInput.value = value || 12;
-        }
     }
 
-    customElements.define("com-planifyit-card-styling", StylePanel);
+    customElements.define("com-planifyit-card-styling", StylePanel); // Renamed tag
 })();
