@@ -7,18 +7,18 @@
   "license": "MIT",
   "id": "planifyit_card",
   "version": "1.0.0",
-  "icon": "https://planifyit.github.io/PlanifyitTAB/PlanifyIT_Logo2.png",
+  "icon": "https://planifyit.github.io/DynoCard/PlanifyIT_Logo2.png",
   "webcomponents": [
     {
       "kind": "main",
       "tag": "planifyit-card-widget",
-      "url": "https://planifyit.github.io/PlanifyitCard/planifyit-card-widget.js",
+      "url": "https://planifyit.github.io/DynoCard/planifyit-card-widget.js",
       "integrity": ""
     },
     {
       "kind": "styling",
       "tag": "com-planifyit-card-styling",
-      "url": "https://planifyit.github.io/PlanifyitCard/style-panel-card.js",
+      "url": "https://planifyit.github.io/DynoCard/style-panel-card.js",
       "integrity": ""
     }
   ],
