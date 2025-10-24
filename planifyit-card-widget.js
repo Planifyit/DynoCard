@@ -268,13 +268,12 @@
         </div>
     `;
 
-    class PlanifyITCardWidget extends HTMLElement { // Renamed class
+    class PlanifyITCardWidget extends HTMLElement {
         constructor() {
             super();
             this._shadowRoot = this.attachShadow({ mode: 'open' });
             this._shadowRoot.appendChild(tmpl.content.cloneNode(true));
      
-            // Internal tracking
             this._props = {}; 
             this._cardData = [];
             this._dataStructure = [];
@@ -289,14 +288,12 @@
             this._cardsPerPage = 10;
             this._currentPage = 1;
 
-            // Get DOM elements
             this._multiSelectButton = this._shadowRoot.getElementById('multiSelectButton');
             this._cancelButton = this._shadowRoot.getElementById('cancelButton');
             this._cardContainer = this._shadowRoot.getElementById('cardContainer');
             this._paginationControls = this._shadowRoot.getElementById('paginationControls');
             this._actionButtons = this._shadowRoot.querySelector('.action-buttons');
             
-            // Event listeners
             this._multiSelectButton.addEventListener('click', this._toggleMultiSelectMode.bind(this));
             this._cancelButton.addEventListener('click', this._cancelMultiSelect.bind(this));
         }
@@ -799,6 +796,7 @@
           return "";
         }
 
+        // --- UPDATED METHOD ---
         setCardDataValue(originalIndex, dataKey, newValue) {
             if (!this._cardData || this._cardData.length === 0) return;
             if (originalIndex < 0 || originalIndex >= this._cardData.length) return;
@@ -807,13 +805,19 @@
                 const dataObject = this._cardData[originalIndex];
                 if (dataObject) {
                     dataObject[dataKey] = newValue;
+                    
+                    // Update selectedData if this card was selected
                     this._updateSelectedData(); 
+                    
+                    // Re-render all cards to show the change
                     this._renderWidget(); 
 
+                    // Dispatch ONLY selectedData (if it changed) and
+                    // other properties that are not the main data source.
+                    // DO NOT dispatch 'cardData'.
                     this.dispatchEvent(new CustomEvent("propertiesChanged", {
                         detail: { 
                             properties: { 
-                                cardData: JSON.stringify(this._cardData),
                                 selectedData: JSON.stringify(this._selectedData)
                             } 
                         }
@@ -872,5 +876,5 @@
             }));
         }
     }
-    customElements.define('planifyit-card-widget', PlanifyITCardWidget); // Renamed tag
+    customElements.define('planifyit-card-widget', PlanifyITCardWidget);
 })();
