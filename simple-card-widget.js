@@ -3,9 +3,9 @@
     tmpl.innerHTML = `
         <style>
             :host {
+                /* CSS variables for styling from properties */
                 --card-bg-color: #ffffff;
                 --card-border-color: #e0e0e0;
-                /* Add selected color back */
                 --selected-card-bg-color: #e8f0fe; 
                 --selected-card-border-color: #1a73e8;
                 --card-title-color: #333333;
@@ -40,7 +40,7 @@
                 font-weight: bold;
             }
 
-            .action-buttons {
+            .action-buttons { /* Kept for structure, but empty */
                 display: flex;
                 gap: 8px;
             }
@@ -85,7 +85,6 @@
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
             
-            /* Add selected style back */
             .card.selected {
                 background-color: var(--selected-card-bg-color);
                 border-color: var(--selected-card-border-color);
@@ -163,7 +162,7 @@
 
             /* Symbol styles */
             .symbol { display: inline-block; text-align: center; }
-            .symbol-folder { color: inherit; } /* Use color from .card-icon */
+            .symbol-folder { color: inherit; } 
             .symbol-check { color: #4CAF50; }
             .symbol-x { color: #F44336; }
             .symbol-arrow-up { color: #4CAF50; }
@@ -243,8 +242,8 @@
             this._dataStructure = [];
             this._cardLayout = [];
             this._cardIcon = {};
-            this._selectedIndices = []; // Re-add selection state
-            this._selectedData = [];    // Re-add selection state
+            this._selectedIndices = []; 
+            this._selectedData = [];    
             this._dynamicButtons = []; 
             this._initialized = false;
             this._lastClickedButtonId = null;
@@ -256,10 +255,10 @@
             this._cardContainer = this._shadowRoot.getElementById('cardContainer');
             this._paginationControls = this._shadowRoot.getElementById('paginationControls');
             this._headerTitle = this._shadowRoot.getElementById('widgetHeaderTitle');
-            // No multi-select buttons
+            // Remove reference to _actionButtons
         }
 
-        // --- Symbol Logic ---
+        // --- Symbol Logic (Unchanged) ---
         
         _getSymbols() {
              return [
@@ -291,20 +290,16 @@
             return span;
         }
 
-        // --- Selection Logic (Re-added for single selection) ---
+        // --- Selection Logic (Unchanged) ---
 
         _handleCardClick(originalIndex, dataObject) {
-            // Simple single selection logic
             if (this._selectedIndices.includes(originalIndex)) {
-                this._selectedIndices = []; // Deselect if clicking the same card
+                this._selectedIndices = []; 
             } else {
-                this._selectedIndices = [originalIndex]; // Select the new card
+                this._selectedIndices = [originalIndex]; 
             }
-            
-            this._updateSelectedData(); // Update the selected data array
-            this._renderCards(); // Re-render to show selection visually
-            
-            // Fire events
+            this._updateSelectedData(); 
+            this._renderCards(); 
             this.dispatchEvent(new Event("onSelectionChanged"));
             this.dispatchEvent(new CustomEvent("propertiesChanged", {
                 detail: {
@@ -318,11 +313,10 @@
         }
 
         _updateSelectedData() {
-            // Map selected indices to their corresponding data objects
             this._selectedData = this._selectedIndices.map(index => this._cardData[index]);
         }
 
-        // --- Main Rendering Logic ---
+        // --- Main Rendering Logic (Unchanged) ---
 
         _renderWidget() {
             if (!this._initialized) return;
@@ -332,102 +326,56 @@
 
         _renderCards() {
             this._cardContainer.innerHTML = '';
-            
             if (!this._cardData || this._cardData.length === 0) {
                 this._cardContainer.innerHTML = '<div class="no-data-message">No data available</div>';
                 return;
             }
-
             const sortedLayout = [...this._cardLayout].sort((a, b) => (a.order || 0) - (b.order || 0));
             const buttonsConfig = typeof this._dynamicButtons === 'string' ? JSON.parse(this._dynamicButtons) : (this._dynamicButtons || []);
             const iconConfig = typeof this._cardIcon === 'string' ? JSON.parse(this._cardIcon) : (this._cardIcon || {});
-
             const startIndex = (this._currentPage - 1) * this._cardsPerPage;
             const endIndex = this._currentPage * this._cardsPerPage;
             const paginatedData = this._cardData.slice(startIndex, endIndex);
-
             if (paginatedData.length === 0 && this._cardData.length > 0) {
                  this._cardContainer.innerHTML = '<div class="no-data-message">No data on this page</div>';
                  return;
             }
-
             paginatedData.forEach((dataObject, i) => {
                 const originalIndex = startIndex + i;
                 const card = document.createElement('div');
                 card.className = 'card';
-                // Add selected class if needed
-                if (this._selectedIndices.includes(originalIndex)) {
-                    card.classList.add('selected');
-                }
-                // Re-add click listener for selection
+                if (this._selectedIndices.includes(originalIndex)) card.classList.add('selected');
                 card.addEventListener('click', () => this._handleCardClick(originalIndex, dataObject));
-
-                // Add Static Card Icon
                 if (iconConfig.symbol) {
-                    const iconContainer = document.createElement('div');
-                    iconContainer.className = 'card-icon';
+                    const iconContainer = document.createElement('div'); iconContainer.className = 'card-icon';
                     if (iconConfig.color) iconContainer.style.color = iconConfig.color;
-                    iconContainer.appendChild(this._createSymbolElement({
-                        type: iconConfig.symbol,
-                        symbol: this._symbolMap[iconConfig.symbol] || '●'
-                    }));
+                    iconContainer.appendChild(this._createSymbolElement({ type: iconConfig.symbol, symbol: this._symbolMap[iconConfig.symbol] || '●' }));
                     card.appendChild(iconContainer);
                 }
-
-                // Add Card Content
-                const cardContent = document.createElement('div');
-                cardContent.className = 'card-content';
+                const cardContent = document.createElement('div'); cardContent.className = 'card-content';
                 sortedLayout.forEach(rowConfig => {
-                    const value = dataObject[rowConfig.dataKey] || '';
-                    const rowEl = document.createElement('div');
-                    rowEl.className = 'card-row';
+                    const value = dataObject[rowConfig.dataKey] || ''; const rowEl = document.createElement('div'); rowEl.className = 'card-row';
                     switch (rowConfig.type) {
-                        case 'Title':
-                            rowEl.classList.add('card-row-title');
-                            rowEl.textContent = value;
-                            cardContent.appendChild(rowEl);
-                            break;
-                        case 'Text':
-                            rowEl.classList.add('card-row-text');
-                            rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`;
-                            rowEl.appendChild(document.createTextNode(value));
-                            cardContent.appendChild(rowEl);
-                            break;
+                        case 'Title': rowEl.classList.add('card-row-title'); rowEl.textContent = value; cardContent.appendChild(rowEl); break;
+                        case 'Text': rowEl.classList.add('card-row-text'); rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`; rowEl.appendChild(document.createTextNode(value)); cardContent.appendChild(rowEl); break;
                     }
                 });
                 card.appendChild(cardContent);
-
-                // Add Dynamic Buttons to Card
-                const cardButtonsContainer = document.createElement('div');
-                cardButtonsContainer.className = 'card-buttons-container';
-                if (Array.isArray(buttonsConfig) && buttonsConfig.length > 0) {
+                const cardButtonsContainer = document.createElement('div'); cardButtonsContainer.className = 'card-buttons-container';
+                if (Array.isArray(buttonsConfig)) {
                     buttonsConfig.forEach(buttonConfig => {
                         if (buttonConfig.id && buttonConfig.visibility !== 'hidden') {
-                            const button = document.createElement('button');
-                            button.className = 'dynamic-button';
-                            button.title = buttonConfig.tooltip || buttonConfig.id;
-                            button.textContent = this._symbolMap[buttonConfig.symbol] || '●';
-                            if (buttonConfig.backgroundColor && buttonConfig.backgroundColor.trim() !== '') {
-                                button.style.backgroundColor = buttonConfig.backgroundColor;
-                                button.style.color = '#ffffff'; 
-                            }
+                            const button = document.createElement('button'); button.className = 'dynamic-button'; button.title = buttonConfig.tooltip || buttonConfig.id; button.textContent = this._symbolMap[buttonConfig.symbol] || '●';
+                            if (buttonConfig.backgroundColor && buttonConfig.backgroundColor.trim() !== '') { button.style.backgroundColor = buttonConfig.backgroundColor; button.style.color = '#ffffff'; }
                             button.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                this._lastClickedButtonId = buttonConfig.id;
-                                this.lastClickedButtonId = buttonConfig.id;
-                                this.dispatchEvent(new CustomEvent("onCustomButtonClicked", {
-                                    detail: { buttonId: buttonConfig.id, buttonConfig: buttonConfig, originalIndex: originalIndex, dataObject: dataObject }
-                                }));
-                                this.dispatchEvent(new CustomEvent("propertiesChanged", {
-                                    detail: { properties: { lastClickedButtonId: buttonConfig.id } }
-                                }));
-                            });
-                            cardButtonsContainer.appendChild(button);
+                                e.stopPropagation(); this._lastClickedButtonId = buttonConfig.id; this.lastClickedButtonId = buttonConfig.id;
+                                this.dispatchEvent(new CustomEvent("onCustomButtonClicked", { detail: { buttonId: buttonConfig.id, buttonConfig: buttonConfig, originalIndex: originalIndex, dataObject: dataObject } }));
+                                this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { lastClickedButtonId: buttonConfig.id } } }));
+                            }); cardButtonsContainer.appendChild(button);
                         }
                     });
                 }
                 card.appendChild(cardButtonsContainer);
-                
                 this._cardContainer.appendChild(card);
             });
         }
@@ -436,226 +384,78 @@
             this._paginationControls.innerHTML = '';
             const totalPages = Math.ceil(this._cardData.length / this._cardsPerPage);
             if (totalPages <= 1) return;
-
-            const prevButton = document.createElement('button');
-            prevButton.className = 'pagination-button';
-            prevButton.textContent = '◀ Prev';
-            if (this._currentPage === 1) prevButton.disabled = true;
-            prevButton.addEventListener('click', () => this._changePage(this._currentPage - 1));
-            this._paginationControls.appendChild(prevButton);
-
-            const pageInfo = document.createElement('span');
-            pageInfo.className = 'pagination-info';
-            pageInfo.textContent = `Page ${this._currentPage} of ${totalPages}`;
-            this._paginationControls.appendChild(pageInfo);
-
-            const nextButton = document.createElement('button');
-            nextButton.className = 'pagination-button';
-            nextButton.textContent = 'Next ▶';
-            if (this._currentPage === totalPages) nextButton.disabled = true;
-            nextButton.addEventListener('click', () => this._changePage(this._currentPage + 1));
-            this._paginationControls.appendChild(nextButton);
+            const prevButton = document.createElement('button'); prevButton.className = 'pagination-button'; prevButton.textContent = '◀ Prev'; if (this._currentPage === 1) prevButton.disabled = true; prevButton.addEventListener('click', () => this._changePage(this._currentPage - 1)); this._paginationControls.appendChild(prevButton);
+            const pageInfo = document.createElement('span'); pageInfo.className = 'pagination-info'; pageInfo.textContent = `Page ${this._currentPage} of ${totalPages}`; this._paginationControls.appendChild(pageInfo);
+            const nextButton = document.createElement('button'); nextButton.className = 'pagination-button'; nextButton.textContent = 'Next ▶'; if (this._currentPage === totalPages) nextButton.disabled = true; nextButton.addEventListener('click', () => this._changePage(this._currentPage + 1)); this._paginationControls.appendChild(nextButton);
         }
 
         _changePage(newPage) {
-            if (newPage < 1 || newPage > Math.ceil(this._cardData.length / this._cardsPerPage)) {
-                return;
-            }
+            if (newPage < 1 || newPage > Math.ceil(this._cardData.length / this._cardsPerPage)) return;
             this._currentPage = newPage;
             this._renderWidget();
         }
         
-        // --- SAC Lifecycle Hooks & Data Binding ---
+        // --- SAC Lifecycle Hooks & Data Binding (Unchanged) ---
         
         connectedCallback() {
             if (!this._initialized) {
                 this._initialized = true;
-
-                if (this.hasAttribute("dynamicButtons")) {
-                    try { this._dynamicButtons = JSON.parse(this.getAttribute("dynamicButtons")); } catch (e) {}
-                }
-                if (this.hasAttribute("cardIcon")) {
-                    try { this._cardIcon = JSON.parse(this.getAttribute("cardIcon")); } catch (e) {}
-                }
-                if (this.hasAttribute("cardLayout")) {
-                    try { this._cardLayout = JSON.parse(this.getAttribute("cardLayout")); } catch (e) {}
-                }
-                if (this.hasAttribute("cardsPerPage")) {
-                    this._cardsPerPage = parseInt(this.getAttribute("cardsPerPage"), 10) || 10;
-                }
-                if (this.hasAttribute("headerTitle")) {
-                    this._headerTitle.textContent = this.getAttribute("headerTitle");
-                }
-                 if (this.hasAttribute("selectedIndices")) { // Load initial selection
-                    try { this._selectedIndices = JSON.parse(this.getAttribute("selectedIndices")); } catch (e) {}
-                }
-                
-                if (this.cardDataBinding) {
-                    this._updateDataBinding(this.cardDataBinding);
-                }
+                if (this.hasAttribute("dynamicButtons")) { try { this._dynamicButtons = JSON.parse(this.getAttribute("dynamicButtons")); } catch (e) {} }
+                if (this.hasAttribute("cardIcon")) { try { this._cardIcon = JSON.parse(this.getAttribute("cardIcon")); } catch (e) {} }
+                if (this.hasAttribute("cardLayout")) { try { this._cardLayout = JSON.parse(this.getAttribute("cardLayout")); } catch (e) {} }
+                if (this.hasAttribute("cardsPerPage")) { this._cardsPerPage = parseInt(this.getAttribute("cardsPerPage"), 10) || 10; }
+                if (this.hasAttribute("headerTitle")) { this._headerTitle.textContent = this.getAttribute("headerTitle"); }
+                if (this.hasAttribute("selectedIndices")) { try { this._selectedIndices = JSON.parse(this.getAttribute("selectedIndices")); } catch (e) {} }
+                if (this.cardDataBinding) { this._updateDataBinding(this.cardDataBinding); }
             }
             this._renderWidget();
         }
         
-        onCustomWidgetBeforeUpdate(changedProperties) {
-            this._props = { ...this._props, ...changedProperties };
-        }
+        onCustomWidgetBeforeUpdate(changedProperties) { this._props = { ...this._props, ...changedProperties }; }
         
         _updateDataBinding(dataBinding) {
-            if (
-                dataBinding &&
-                dataBinding.state === 'success' &&
-                Array.isArray(dataBinding.data)
-            ) {
+            if (dataBinding && dataBinding.state === 'success' && Array.isArray(dataBinding.data)) {
                 const columns = [];
-                const dims = dataBinding.metadata && dataBinding.metadata.dimensions;
-                if (dims && typeof dims === "object" && !Array.isArray(dims)) {
-                    Object.keys(dims).forEach(dimKey => columns.push({ name: dimKey, label: dims[dimKey].description || dims[dimKey].label || dims[dimKey].id }));
-                }
-                 const measures = dataBinding.metadata && dataBinding.metadata.mainStructureMembers;
-                if (measures && typeof measures === "object" && !Array.isArray(measures)) {
-                    Object.keys(measures).forEach(measKey => columns.push({ name: measKey, label: measures[measKey].label || measures[measKey].id }));
-                }
-
-                const cardData = dataBinding.data.map((row) => {
-                    const transformedRow = {};
-                    columns.forEach(col => {
-                        let cellObj = row[col.name];
-                        transformedRow[col.name] = cellObj ? (cellObj.label || cellObj.formattedValue || cellObj.formatted || cellObj.raw || "") : "";
-                    });
-                    return transformedRow;
-                });
-                
-                this._dataStructure = columns;
-                this._cardData = cardData;
-                this._currentPage = 1;
-                 this._selectedIndices = []; // Clear selection on new data
-                 this._updateSelectedData();
-                this._renderWidget();
+                const dims = dataBinding.metadata && dataBinding.metadata.dimensions; if (dims && typeof dims === "object" && !Array.isArray(dims)) Object.keys(dims).forEach(dimKey => columns.push({ name: dimKey, label: dims[dimKey].description || dims[dimKey].label || dims[dimKey].id }));
+                const measures = dataBinding.metadata && dataBinding.metadata.mainStructureMembers; if (measures && typeof measures === "object" && !Array.isArray(measures)) Object.keys(measures).forEach(measKey => columns.push({ name: measKey, label: measures[measKey].label || measures[measKey].id }));
+                const cardData = dataBinding.data.map((row) => { const transformedRow = {}; columns.forEach(col => { let cellObj = row[col.name]; transformedRow[col.name] = cellObj ? (cellObj.label || cellObj.formattedValue || cellObj.formatted || cellObj.raw || "") : ""; }); return transformedRow; });
+                this._dataStructure = columns; this._cardData = cardData; this._currentPage = 1; this._selectedIndices = []; this._updateSelectedData(); this._renderWidget();
             }
         }
         
         onCustomWidgetAfterUpdate(changedProperties) {
-            if ("cardDataBinding" in changedProperties) {
-                this._updateDataBinding(changedProperties.cardDataBinding);
-            }
-            
-            if ('cardData' in changedProperties) {
-                try {
-                    this._cardData = JSON.parse(changedProperties.cardData);
-                    this._currentPage = 1;
-                    this._selectedIndices = [];
-                    this._updateSelectedData();
-                    this._renderWidget();
-                } catch (e) {}
-            }
-
-            if ('cardIcon' in changedProperties) {
-                try { this._cardIcon = JSON.parse(changedProperties.cardIcon); } catch (e) { this._cardIcon = {}; }
-                this._renderWidget();
-            }
-
-            if ('cardLayout' in changedProperties) {
-                try { this._cardLayout = JSON.parse(changedProperties.cardLayout); } catch (e) {}
-                this._renderWidget();
-            }
-
-            if ('cardsPerPage' in changedProperties) {
-                this._cardsPerPage = parseInt(changedProperties.cardsPerPage, 10) || 10;
-                this._currentPage = 1;
-                this._renderWidget();
-            }
-            
-            if ('dynamicButtons' in changedProperties) {
-                try { this._dynamicButtons = typeof changedProperties.dynamicButtons === 'string' ? JSON.parse(changedProperties.dynamicButtons) : changedProperties.dynamicButtons; } catch (e) {}
-                this._renderWidget();
-            }
-            
-            if ('headerTitle' in changedProperties) {
-                this._headerTitle.textContent = changedProperties.headerTitle;
-            }
-
-            if ('selectedIndices' in changedProperties) { // Handle external selection changes
-                try {
-                    this._selectedIndices = JSON.parse(changedProperties.selectedIndices);
-                    this._updateSelectedData();
-                    this._renderWidget(); // Re-render to show external selection
-                } catch (e) { console.error('Invalid selectedIndices property:', e); }
-            }
-
+            if ("cardDataBinding" in changedProperties) this._updateDataBinding(changedProperties.cardDataBinding);
+            if ('cardData' in changedProperties) { try { this._cardData = JSON.parse(changedProperties.cardData); this._currentPage = 1; this._selectedIndices = []; this._updateSelectedData(); this._renderWidget(); } catch (e) {} }
+            if ('cardIcon' in changedProperties) { try { this._cardIcon = JSON.parse(changedProperties.cardIcon); } catch (e) { this._cardIcon = {}; } this._renderWidget(); }
+            if ('cardLayout' in changedProperties) { try { this._cardLayout = JSON.parse(changedProperties.cardLayout); } catch (e) {} this._renderWidget(); }
+            if ('cardsPerPage' in changedProperties) { this._cardsPerPage = parseInt(changedProperties.cardsPerPage, 10) || 10; this._currentPage = 1; this._renderWidget(); }
+            if ('dynamicButtons' in changedProperties) { try { this._dynamicButtons = typeof changedProperties.dynamicButtons === 'string' ? JSON.parse(changedProperties.dynamicButtons) : changedProperties.dynamicButtons; } catch (e) {} this._renderWidget(); }
+            if ('headerTitle' in changedProperties) this._headerTitle.textContent = changedProperties.headerTitle;
+            if ('selectedIndices' in changedProperties) { try { this._selectedIndices = JSON.parse(changedProperties.selectedIndices); this._updateSelectedData(); this._renderWidget(); } catch (e) { console.error('Invalid selectedIndices property:', e); } }
             const hostStyle = this._shadowRoot.host.style;
             if ('cardBackgroundColor' in changedProperties) hostStyle.setProperty('--card-bg-color', changedProperties.cardBackgroundColor);
             if ('cardBorderColor' in changedProperties) hostStyle.setProperty('--card-border-color', changedProperties.cardBorderColor);
-            if ('selectedCardColor' in changedProperties) hostStyle.setProperty('--selected-card-bg-color', changedProperties.selectedCardColor); // Re-add
+            if ('selectedCardColor' in changedProperties) hostStyle.setProperty('--selected-card-bg-color', changedProperties.selectedCardColor);
             if ('cardTitleColor' in changedProperties) hostStyle.setProperty('--card-title-color', changedProperties.cardTitleColor);
             if ('cardTextColor' in changedProperties) hostStyle.setProperty('--card-text-color', changedProperties.cardTextColor);
         }
 
-        // --- Public Getters/Setters ---
+        // --- Public Getters/Setters (Unchanged) ---
 
         get dynamicButtons() { return typeof this._dynamicButtons === 'string' ? this._dynamicButtons : JSON.stringify(this._dynamicButtons); }
-        set dynamicButtons(value) {
-            try { this._dynamicButtons = typeof value === 'string' ? JSON.parse(value) : value; } catch (e) {}
-            this._renderWidget();
-        }
-
+        set dynamicButtons(value) { try { this._dynamicButtons = typeof value === 'string' ? JSON.parse(value) : value; } catch (e) {} this._renderWidget(); }
         get lastClickedButtonId() { return this._lastClickedButtonId || ''; }
-        set lastClickedButtonId(value) {
-            this._lastClickedButtonId = value;
-            this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { lastClickedButtonId: value } } }));
-        }
-
-        getButtonVisibility(buttonId) {
-          const button = (this._dynamicButtons || []).find(btn => btn.id === buttonId);
-          return button ? button.visibility : "";
-        }
-        setButtonVisibility(buttonId, visibility) {
-            if (visibility !== 'visible' && visibility !== 'hidden') return;
-            let buttons = [...this._dynamicButtons];
-            let buttonFound = false;
-            for (let i = 0; i < buttons.length; i++) { if (buttons[i].id === buttonId) { buttons[i].visibility = visibility; buttonFound = true; break; } }
-            if (!buttonFound) return;
-            this.dynamicButtons = JSON.stringify(buttons);
-            this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { dynamicButtons: JSON.stringify(buttons) } } }));
-        }
-
-        getCardDataValue(key, originalIndex) {
-            if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return "";
-            try { const dataObject = this._cardData[originalIndex]; return (dataObject && dataObject[key] != null) ? String(dataObject[key]) : ""; } 
-            catch (e) { console.error("Error in getCardDataValue:", e); return ""; }
-        }
-        
-        // Re-added method
-        getSelectedDataValue(key) {
-            if (!this._selectedData || this._selectedData.length === 0) return "";
-            // Assumes single selection, takes the first selected item
-            const selectedObject = this._selectedData[0]; 
-             if (selectedObject && selectedObject[key] != null) {
-                return String(selectedObject[key]);
-            }
-            return "";
-        }
-
-
-        setCardDataValue(originalIndex, dataKey, newValue) {
-            if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return;
-            try { const dataObject = this._cardData[originalIndex]; if (dataObject) { dataObject[dataKey] = newValue; this._updateSelectedData(); this._renderWidget(); } } 
-            catch (e) { console.error("Error in setCardDataValue:", e); }
-        }
-   
+        set lastClickedButtonId(value) { this._lastClickedButtonId = value; this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { lastClickedButtonId: value } } })); }
+        getButtonVisibility(buttonId) { const button = (this._dynamicButtons || []).find(btn => btn.id === buttonId); return button ? button.visibility : ""; }
+        setButtonVisibility(buttonId, visibility) { if (visibility !== 'visible' && visibility !== 'hidden') return; let buttons = [...this._dynamicButtons]; let bf = false; for (let i=0;i<buttons.length; i++){ if(buttons[i].id === buttonId){ buttons[i].visibility = visibility; bf=true; break; } } if(!bf) return; this.dynamicButtons = JSON.stringify(buttons); this.dispatchEvent(new CustomEvent("propertiesChanged", { detail: { properties: { dynamicButtons: JSON.stringify(buttons) } } })); }
+        getCardDataValue(key, originalIndex) { if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return ""; try { const d=this._cardData[originalIndex]; return (d && d[key] != null)?String(d[key]):""; } catch (e) { console.error("Error in getCardDataValue:", e); return ""; } }
+        getSelectedDataValue(key) { if (!this._selectedData || this._selectedData.length === 0) return ""; const s = this._selectedData[0]; return (s && s[key] != null)?String(s[key]):""; }
+        setCardDataValue(originalIndex, dataKey, newValue) { if (!this._cardData || originalIndex < 0 || originalIndex >= this._cardData.length) return; try { const d=this._cardData[originalIndex]; if (d) { d[dataKey] = newValue; this._updateSelectedData(); this._renderWidget(); } } catch (e) { console.error("Error in setCardDataValue:", e); } }
         get cardData() { return JSON.stringify(this._cardData); }
-        set cardData(value) {
-            try { this._cardData = JSON.parse(value); this._currentPage = 1; this._selectedIndices = []; this._updateSelectedData(); this._renderWidget(); } 
-            catch (e) {}
-        }
-        
-        // Re-added getters/setters
+        set cardData(value) { try { this._cardData = JSON.parse(value); this._currentPage = 1; this._selectedIndices = []; this._updateSelectedData(); this._renderWidget(); } catch (e) {} }
         get selectedIndices() { return JSON.stringify(this._selectedIndices); }
         get selectedData() { return JSON.stringify(this._selectedData); }
-        set selectedIndices(value) {
-            try { this._selectedIndices = JSON.parse(value); this._updateSelectedData(); this._renderWidget(); } 
-            catch (e) {}
-        }
+        set selectedIndices(value) { try { this._selectedIndices = JSON.parse(value); this._updateSelectedData(); this._renderWidget(); } catch (e) {} }
     }
     customElements.define('simple-card-widget', SimpleCardWidget);
 })();
