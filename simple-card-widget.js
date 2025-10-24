@@ -3,7 +3,6 @@
     tmpl.innerHTML = `
         <style>
             :host {
-                /* CSS variables for styling from properties */
                 --card-bg-color: #ffffff;
                 --card-border-color: #e0e0e0;
                 --card-title-color: #333333;
@@ -25,7 +24,7 @@
             .widget-header {
                 display: flex;
                 align-items: center;
-                background-color: #1a73e8; /* Default header color */
+                background-color: #1a73e8;
                 color: white;
                 padding: 10px;
                 position: sticky;
@@ -63,7 +62,7 @@
             }
 
             .card {
-                flex: 1 1 250px; /* Responsive sizing */
+                flex: 1 1 250px;
                 min-width: 220px;
                 background-color: var(--card-bg-color);
                 border: 1px solid var(--card-border-color);
@@ -72,24 +71,45 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 transition: box-shadow 0.3s, border-color 0.3s;
                 word-wrap: break-word;
-                position: relative; /* For button positioning */
-                padding-right: 40px; /* Make space for buttons */
-                cursor: default; /* No selection click */
+                position: relative;
+                padding-left: 50px; /* Space for the icon */
+                padding-right: 40px; /* Space for buttons */
+                cursor: default;
+                min-height: 40px; /* Ensure card has height */
             }
 
             .card:hover {
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
 
+            /* New Card Icon */
+            .card-icon {
+                position: absolute;
+                top: 12px;
+                left: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #1a73e8; /* Default color */
+            }
+            
+            .card-content {
+                display: flex;
+                flex-direction: column;
+            }
+
             .card-row {
                 margin-bottom: 6px;
             }
+            
             .card-row-title {
                 font-weight: bold;
                 font-size: 1.1em;
                 color: var(--card-title-color);
                 margin-bottom: 8px;
-                padding-right: 30px; /* Don't overlap buttons */
             }
             .card-row-text {
                 font-size: 0.9em;
@@ -100,10 +120,6 @@
                 color: var(--card-text-color);
                 margin-right: 5px;
             }
-            .card-row-symbol {
-                font-size: 0.9em;
-            }
-
 
             /* Pagination Styles */
             .pagination-controls {
@@ -137,7 +153,8 @@
             }
 
             /* Symbol styles */
-            .symbol { display: inline-block; width: 16px; height: 16px; text-align: center; line-height: 16px; margin-right: 5px; }
+            .symbol { display: inline-block; text-align: center; }
+            .symbol-folder { color: inherit; } /* Use color from .card-icon */
             .symbol-check { color: #4CAF50; }
             .symbol-x { color: #F44336; }
             .symbol-arrow-up { color: #4CAF50; }
@@ -161,7 +178,7 @@
                 top: 8px;
                 right: 8px;
                 display: flex;
-                flex-direction: row; /* Horizontal buttons */
+                flex-direction: row;
                 gap: 4px;
                 z-index: 5;
             }
@@ -170,21 +187,21 @@
                 display: flex;
                 border: none;
                 border-radius: 4px;
-                color: #555; /* Default icon color */
+                color: #555;
                 cursor: pointer;
                 transition: background-color 0.3s, color 0.3s;
-                font-size: 18px; /* Icon size */
+                font-size: 18px;
                 width: 28px;
                 height: 28px;
                 align-items: center;
                 justify-content: center;
-                background-color: transparent; /* Transparent by default */
+                background-color: transparent;
                 margin-right: 0;
                 padding: 0;
             }
             
             .dynamic-button:hover {
-                background-color: #f0f0f0; /* Light hover */
+                background-color: #f0f0f0;
                 color: #111;
             }
         </style>
@@ -216,6 +233,7 @@
             this._cardData = [];
             this._dataStructure = [];
             this._cardLayout = [];
+            this._cardIcon = {}; // For the new icon
             this._dynamicButtons = []; 
             this._initialized = false;
             this._lastClickedButtonId = null;
@@ -233,6 +251,7 @@
         
         _getSymbols() {
             return [
+                { value: 'folder', label: '📁 Folder' },
                 { value: 'check', label: '✓ Check' },
                 { value: 'x', label: '✕ X' },
                 { value: 'arrow-up', label: '↑ Arrow Up' },
@@ -285,9 +304,8 @@
             }
 
             const sortedLayout = [...this._cardLayout].sort((a, b) => (a.order || 0) - (b.order || 0));
-            
-            const buttonsConfig = typeof this._dynamicButtons === 'string' ? 
-                JSON.parse(this._dynamicButtons) : (this._dynamicButtons || []);
+            const buttonsConfig = typeof this._dynamicButtons === 'string' ? JSON.parse(this._dynamicButtons) : (this._dynamicButtons || []);
+            const iconConfig = typeof this._cardIcon === 'string' ? JSON.parse(this._cardIcon) : (this._cardIcon || {});
 
             const startIndex = (this._currentPage - 1) * this._cardsPerPage;
             const endIndex = this._currentPage * this._cardsPerPage;
@@ -302,7 +320,46 @@
                 const originalIndex = startIndex + i;
                 const card = document.createElement('div');
                 card.className = 'card';
-                // No selection listener
+
+                // --- Add Static Card Icon ---
+                if (iconConfig.symbol) {
+                    const iconContainer = document.createElement('div');
+                    iconContainer.className = 'card-icon';
+                    if (iconConfig.color) {
+                        iconContainer.style.color = iconConfig.color;
+                    }
+                    iconContainer.appendChild(this._createSymbolElement({
+                        type: iconConfig.symbol,
+                        symbol: this._symbolMap[iconConfig.symbol] || '●'
+                    }));
+                    card.appendChild(iconContainer);
+                }
+
+                // --- Add Card Content ---
+                const cardContent = document.createElement('div');
+                cardContent.className = 'card-content';
+
+                sortedLayout.forEach(rowConfig => {
+                    const value = dataObject[rowConfig.dataKey] || '';
+                    const rowEl = document.createElement('div');
+                    rowEl.className = 'card-row';
+
+                    switch (rowConfig.type) {
+                        case 'Title':
+                            rowEl.classList.add('card-row-title');
+                            rowEl.textContent = value;
+                            cardContent.appendChild(rowEl);
+                            break;
+                        
+                        case 'Text':
+                            rowEl.classList.add('card-row-text');
+                            rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`;
+                            rowEl.appendChild(document.createTextNode(value));
+                            cardContent.appendChild(rowEl);
+                            break;
+                    }
+                });
+                card.appendChild(cardContent);
 
                 // --- Add Dynamic Buttons to Card ---
                 const cardButtonsContainer = document.createElement('div');
@@ -350,42 +407,6 @@
                 card.appendChild(cardButtonsContainer);
                 // --- End of Button Logic ---
 
-                // Build card content based on layout
-                sortedLayout.forEach(rowConfig => {
-                    const value = dataObject[rowConfig.dataKey] || '';
-                    const rowEl = document.createElement('div');
-                    rowEl.className = 'card-row';
-
-                    switch (rowConfig.type) {
-                        case 'Title':
-                            rowEl.classList.add('card-row-title');
-                            rowEl.textContent = value;
-                            card.appendChild(rowEl);
-                            break;
-                        
-                        case 'Text':
-                            rowEl.classList.add('card-row-text');
-                            rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`;
-                            rowEl.appendChild(document.createTextNode(value));
-                            card.appendChild(rowEl);
-                            break;
-
-                        case 'Symbol':
-                            if (String(value).toLowerCase() === String(rowConfig.valueToMatch).toLowerCase()) {
-                                const symbolChar = this._symbolMap[rowConfig.symbol] || '●';
-                                const symbolElement = this._createSymbolElement({ 
-                                    type: rowConfig.symbol, 
-                                    symbol: symbolChar 
-                                });
-                                
-                                rowEl.classList.add('card-row-symbol');
-                                rowEl.innerHTML = `<span class="card-row-label">${rowConfig.label || rowConfig.dataKey}:</span>`;
-                                rowEl.appendChild(symbolElement);
-                                card.appendChild(rowEl);
-                            }
-                            break;
-                    }
-                });
                 this._cardContainer.appendChild(card);
             });
         }
@@ -431,6 +452,9 @@
 
                 if (this.hasAttribute("dynamicButtons")) {
                     try { this._dynamicButtons = JSON.parse(this.getAttribute("dynamicButtons")); } catch (e) {}
+                }
+                if (this.hasAttribute("cardIcon")) {
+                    try { this._cardIcon = JSON.parse(this.getAttribute("cardIcon")); } catch (e) {}
                 }
                 if (this.hasAttribute("cardLayout")) {
                     try { this._cardLayout = JSON.parse(this.getAttribute("cardLayout")); } catch (e) {}
@@ -520,6 +544,13 @@
                     this._currentPage = 1;
                     this._renderWidget();
                 } catch (e) {}
+            }
+
+            if ('cardIcon' in changedProperties) {
+                try {
+                    this._cardIcon = JSON.parse(changedProperties.cardIcon);
+                    this._renderWidget();
+                } catch (e) { this._cardIcon = {}; }
             }
 
             if ('cardLayout' in changedProperties) {
