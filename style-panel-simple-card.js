@@ -82,9 +82,6 @@
             .full-width {
                 grid-column: 1 / -1;
             }
-            .hidden-field {
-                display: none;
-            }
             
             .add-button, .remove-button {
                 background-color: #f0f0f0;
@@ -111,6 +108,25 @@
                         <td>Header Title</td>
                         <td>
                             <input id="style_header_title" type="text" placeholder="Enter header title">
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+            
+            <fieldset>
+                <legend>Card Icon</legend>
+                <table>
+                    <tr>
+                        <td>Icon</td>
+                        <td>
+                            <select id="style_icon_symbol"></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Icon Color</td>
+                        <td class="color-row">
+                            <input id="style_icon_color" type="text" class="color-input">
+                            <input id="style_icon_color_picker" type="color">
                         </td>
                     </tr>
                 </table>
@@ -192,6 +208,11 @@
             // General
             this._headerTitleInput = this._shadowRoot.getElementById("style_header_title");
 
+            // Card Icon
+            this._iconSymbolSelect = this._shadowRoot.getElementById("style_icon_symbol");
+            this._iconColorInput = this._shadowRoot.getElementById("style_icon_color");
+            this._iconColorPicker = this._shadowRoot.getElementById("style_icon_color_picker");
+
             // Card Appearance
             this._cardBgColorInput = this._shadowRoot.getElementById("style_card_bg_color");
             this._cardBgColorPicker = this._shadowRoot.getElementById("style_card_bg_color_picker");
@@ -218,6 +239,7 @@
             this._cardLayout = [];
             this._dynamicButtons = [];
    
+            this._populateSymbols();
             this._connectColorPickers();
             
             this._form.addEventListener("submit", this._submit.bind(this));
@@ -234,6 +256,7 @@
                 pickerInput.addEventListener("input", () => textInput.value = pickerInput.value);
                 textInput.addEventListener("change", () => pickerInput.value = textInput.value);
             };
+            connect(this._iconColorInput, this._iconColorPicker);
             connect(this._cardBgColorInput, this._cardBgColorPicker);
             connect(this._cardBorderColorInput, this._cardBorderColorPicker);
             connect(this._cardTitleColorInput, this._cardTitleColorPicker);
@@ -243,6 +266,7 @@
         // --- Symbol List ---
         _getSymbols() {
             return [
+                { value: 'folder', label: '📁 Folder' },
                 { value: 'check', label: '✓ Check' }, { value: 'x', label: '✕ X' },
                 { value: 'arrow-up', label: '↑ Arrow Up' }, { value: 'arrow-down', label: '↓ Arrow Down' },
                 { value: 'minus', label: '- Minus' }, { value: 'plus', label: '+ Plus' },
@@ -253,6 +277,20 @@
                 { value: 'change', label: '🔄 Change' }, { value: 'star', label: '⭐ Star' }
             ];
         }
+
+        _populateSymbols() {
+            const symbols = this._getSymbols();
+            // Clear existing options
+            this._iconSymbolSelect.innerHTML = '';
+            
+            symbols.forEach(symbol => {
+                const option = document.createElement("option");
+                option.value = symbol.value;
+                option.textContent = symbol.label;
+                this._iconSymbolSelect.appendChild(option);
+            });
+        }
+
 
         // --- Card Layout Configuration ---
 
@@ -277,7 +315,8 @@
 
             const rowTypeSelect = document.createElement("select");
             rowTypeSelect.className = "card-row-type";
-            ['Title', 'Text', 'Symbol'].forEach(type => {
+            // "Symbol" type removed
+            ['Title', 'Text'].forEach(type => {
                 const option = document.createElement("option");
                 option.value = type;
                 option.textContent = type;
@@ -292,32 +331,6 @@
             sortOrderInput.min = "1";
             sortOrderInput.value = config.order || (this._cardLayoutContainer.children.length + 1);
 
-            const valueToMatchInput = document.createElement("input");
-            valueToMatchInput.type = "text";
-            valueToMatchInput.className = "card-value-match";
-            valueToMatchInput.placeholder = "Value to Match (for Symbol)";
-            valueToMatchInput.value = config.valueToMatch || '';
-            
-            const symbolSelect = document.createElement("select");
-            symbolSelect.className = "card-symbol-select";
-            this._getSymbols().forEach(symbol => {
-                const option = document.createElement("option");
-                option.value = symbol.value;
-                option.textContent = symbol.label;
-                if (symbol.value === config.symbol) option.selected = true;
-                symbolSelect.appendChild(option);
-            });
-
-            const toggleSymbolFields = (type) => {
-                const isSymbol = (type === 'Symbol');
-                valueToMatchInput.classList.toggle('hidden-field', !isSymbol);
-                symbolSelect.classList.toggle('hidden-field', !isSymbol);
-                labelInput.classList.toggle('hidden-field', type === 'Title');
-            };
-            rowTypeSelect.addEventListener('change', (e) => toggleSymbolFields(e.target.value));
-            toggleSymbolFields(config.type || 'Title');
-
-
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "remove-button";
@@ -331,8 +344,6 @@
             grid.appendChild(labelInput);
             grid.appendChild(rowTypeSelect);
             grid.appendChild(sortOrderInput);
-            grid.appendChild(valueToMatchInput);
-            grid.appendChild(symbolSelect);
             entry.appendChild(grid);
             entry.appendChild(removeButton);
             
@@ -349,9 +360,7 @@
                         dataKey: dataKey,
                         label: entry.querySelector(".card-label").value,
                         type: entry.querySelector(".card-row-type").value,
-                        order: parseInt(entry.querySelector(".card-sort-order").value, 10) || 0,
-                        valueToMatch: entry.querySelector(".card-value-match").value,
-                        symbol: entry.querySelector(".card-symbol-select").value
+                        order: parseInt(entry.querySelector(".card-sort-order").value, 10) || 0
                     });
                 }
             });
@@ -391,6 +400,7 @@
             
             const symbolSelect = document.createElement("select");
             symbolSelect.className = "button-symbol-select";
+            // This select needs to be populated
             this._getSymbols().forEach(symbol => {
                 const option = document.createElement("option");
                 option.value = symbol.value;
@@ -398,6 +408,7 @@
                 if (symbol.value === symbolType) option.selected = true;
                 symbolSelect.appendChild(option);
             });
+
 
             const colorRow = document.createElement("div");
             colorRow.className = "color-row full-width";
@@ -459,6 +470,7 @@
                 detail: {
                     properties: {
                         headerTitle: this.headerTitle,
+                        cardIcon: this.cardIcon, // Add new property
                         cardBackgroundColor: this.cardBackgroundColor,
                         cardBorderColor: this.cardBorderColor,
                         cardTitleColor: this.cardTitleColor,
@@ -475,6 +487,25 @@
         
         get headerTitle() { return this._headerTitleInput.value; }
         set headerTitle(value) { this._headerTitleInput.value = value || ''; }
+        
+        get cardIcon() {
+            return JSON.stringify({
+                symbol: this._iconSymbolSelect.value,
+                color: this._iconColorInput.value
+            });
+        }
+        set cardIcon(value) {
+            try {
+                const config = JSON.parse(value);
+                this._iconSymbolSelect.value = config.symbol || 'folder';
+                this._iconColorInput.value = config.color || '#1a73e8';
+                this._iconColorPicker.value = config.color || '#1a73e8';
+            } catch(e) {
+                this._iconSymbolSelect.value = 'folder';
+                this._iconColorInput.value = '#1a73e8';
+                this._iconColorPicker.value = '#1a73e8';
+            }
+        }
         
         get cardBackgroundColor() { return this._cardBgColorInput.value; }
         set cardBackgroundColor(value) { this._cardBgColorInput.value = value; this._cardBgColorPicker.value = value; }
