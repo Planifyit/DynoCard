@@ -60,23 +60,13 @@
                 gap: 8px;
             }
 
-            .header-button {
-                display: flex; 
-                border: none;
-                border-radius: 4px;
-                color: white;
-                cursor: pointer;
-                transition: background-color 0.3s;
-                font-size: 14px;
-                width: 36px;
-                height: 36px;
-                background-color: transparent;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .header-button:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+            .card-buttons {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                display: flex;
+                gap: 6px;
+                z-index: 2;
             }
 
             .dynamic-button {
@@ -86,17 +76,18 @@
                 color: white;
                 cursor: pointer;
                 transition: background-color 0.3s;
-                font-size: 16px;
-                width: 36px;
-                height: 36px;
+                font-size: 14px;
+                width: 32px;
+                height: 32px;
                 align-items: center;
                 justify-content: center;
                 background-color: #008509;
-                margin-right: 4px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             }
             
             .dynamic-button:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+                background-color: #006507;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.3);
             }
 
             .cards-body {
@@ -119,6 +110,7 @@
                 padding: 20px;
                 transition: transform 0.2s, box-shadow 0.2s;
                 cursor: pointer;
+                position: relative;
             }
 
             .card:hover {
@@ -269,8 +261,15 @@
             this._selectedCardData = null;
             this._dynamicButtons = [];
             this._lastClickedButtonId = null;
+            this._lastClickedCardIndex = -1;
             this._symbolMap = this._buildSymbolMap();
             this._initialized = false;
+            
+            // Program data arrays
+            this._programmKuerzel = [];
+            this._programmName = [];
+            this._programmStartEnd = [];
+            this._programmStatus = [];
             
             // Pagination
             this._currentPage = 1;
@@ -279,7 +278,6 @@
 
             // Get DOM elements
             this._cardsGrid = this._shadowRoot.getElementById('cardsGrid');
-            this._actionButtons = this._shadowRoot.querySelector('.action-buttons');
             this._prevButton = this._shadowRoot.getElementById('prevButton');
             this._nextButton = this._shadowRoot.getElementById('nextButton');
             this._pageInfo = this._shadowRoot.getElementById('pageInfo');
@@ -318,9 +316,9 @@
             return symbolMap;
         }
 
-        _renderDynamicButtons() {
-            const existingButtons = this._shadowRoot.querySelectorAll('.dynamic-button');
-            existingButtons.forEach(button => button.remove());
+        _createCardButtons(cardIndex, cardData) {
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'card-buttons';
             
             try {
                 const buttons = typeof this._dynamicButtons === 'string' ? 
@@ -339,33 +337,40 @@
                                 button.style.backgroundColor = buttonConfig.backgroundColor;
                             }
 
-                            button.addEventListener('click', () => {
+                            button.addEventListener('click', (e) => {
+                                e.stopPropagation(); // Prevent card selection when clicking button
+                                
                                 this._lastClickedButtonId = buttonConfig.id;
                                 this.lastClickedButtonId = buttonConfig.id;
                                 
                                 this.dispatchEvent(new CustomEvent("onCustomButtonClicked", {
                                     detail: {
                                         buttonId: buttonConfig.id,
-                                        buttonConfig: buttonConfig
+                                        buttonConfig: buttonConfig,
+                                        cardIndex: cardIndex,
+                                        cardData: cardData
                                     }
                                 }));
                                 
                                 this.dispatchEvent(new CustomEvent("propertiesChanged", {
                                     detail: {
                                         properties: {
-                                            lastClickedButtonId: buttonConfig.id
+                                            lastClickedButtonId: buttonConfig.id,
+                                            lastClickedCardIndex: cardIndex
                                         }
                                     }
                                 }));
                             });
                             
-                            this._actionButtons.appendChild(button);
+                            buttonsContainer.appendChild(button);
                         }
                     });
                 }
             } catch (e) {
-                console.error('Error rendering dynamic buttons:', e);
+                console.error('Error creating card buttons:', e);
             }
+            
+            return buttonsContainer;
         }
 
         _previousPage() {
@@ -421,6 +426,10 @@
                 if (this._selectedCardIndex === actualIndex) {
                     card.classList.add('selected');
                 }
+
+                // Add dynamic buttons to the card
+                const cardButtons = this._createCardButtons(actualIndex, cardDataItem);
+                card.appendChild(cardButtons);
 
                 // Sort card rows by order
                 const sortedRows = [...this._cardRows].sort((a, b) => 
@@ -572,6 +581,39 @@
                     }
                 }
 
+                // Initialize programm properties
+                if (this.hasAttribute("programmKuerzel")) {
+                    try {
+                        this._programmKuerzel = JSON.parse(this.getAttribute("programmKuerzel"));
+                    } catch (e) {
+                        console.error("Invalid programmKuerzel attribute", e);
+                    }
+                }
+
+                if (this.hasAttribute("programmName")) {
+                    try {
+                        this._programmName = JSON.parse(this.getAttribute("programmName"));
+                    } catch (e) {
+                        console.error("Invalid programmName attribute", e);
+                    }
+                }
+
+                if (this.hasAttribute("programmStartEnd")) {
+                    try {
+                        this._programmStartEnd = JSON.parse(this.getAttribute("programmStartEnd"));
+                    } catch (e) {
+                        console.error("Invalid programmStartEnd attribute", e);
+                    }
+                }
+
+                if (this.hasAttribute("programmStatus")) {
+                    try {
+                        this._programmStatus = JSON.parse(this.getAttribute("programmStatus"));
+                    } catch (e) {
+                        console.error("Invalid programmStatus attribute", e);
+                    }
+                }
+
                 if (this.cardDataBinding) {
                     this._updateDataBinding(this.cardDataBinding);
                 }
@@ -579,7 +621,6 @@
                 this._initialized = true;
             }
 
-            this._renderDynamicButtons();
             this._renderCards();
         }
 
@@ -592,7 +633,7 @@
                 try {
                     this._dynamicButtons = typeof changedProperties.dynamicButtons === 'string' ? 
                         JSON.parse(changedProperties.dynamicButtons) : changedProperties.dynamicButtons;
-                    this._renderDynamicButtons();
+                    this._renderCards(); // Re-render cards to update buttons
                 } catch (e) {
                     console.error('Invalid dynamic buttons:', e);
                 }
@@ -644,6 +685,43 @@
                 this._cardsPerPage = changedProperties.cardsPerPage;
                 this._currentPage = 1;
                 this._renderCards();
+            }
+
+            // Handle programm properties updates
+            if ('programmKuerzel' in changedProperties) {
+                try {
+                    this._programmKuerzel = typeof changedProperties.programmKuerzel === 'string' ? 
+                        JSON.parse(changedProperties.programmKuerzel) : changedProperties.programmKuerzel;
+                } catch (e) {
+                    console.error('Invalid programmKuerzel:', e);
+                }
+            }
+
+            if ('programmName' in changedProperties) {
+                try {
+                    this._programmName = typeof changedProperties.programmName === 'string' ? 
+                        JSON.parse(changedProperties.programmName) : changedProperties.programmName;
+                } catch (e) {
+                    console.error('Invalid programmName:', e);
+                }
+            }
+
+            if ('programmStartEnd' in changedProperties) {
+                try {
+                    this._programmStartEnd = typeof changedProperties.programmStartEnd === 'string' ? 
+                        JSON.parse(changedProperties.programmStartEnd) : changedProperties.programmStartEnd;
+                } catch (e) {
+                    console.error('Invalid programmStartEnd:', e);
+                }
+            }
+
+            if ('programmStatus' in changedProperties) {
+                try {
+                    this._programmStatus = typeof changedProperties.programmStatus === 'string' ? 
+                        JSON.parse(changedProperties.programmStatus) : changedProperties.programmStatus;
+                } catch (e) {
+                    console.error('Invalid programmStatus:', e);
+                }
             }
 
             if ('headerColor' in changedProperties) {
@@ -765,7 +843,7 @@
         set dynamicButtons(value) {
             try {
                 this._dynamicButtons = typeof value === 'string' ? JSON.parse(value) : value;
-                this._renderDynamicButtons();
+                this._renderCards(); // Re-render cards to update buttons
                 this.dispatchEvent(new CustomEvent("propertiesChanged", {
                     detail: { properties: { dynamicButtons: typeof value === 'string' ? value : JSON.stringify(value) } }
                 }));
@@ -787,6 +865,81 @@
                     } 
                 }
             }));
+        }
+
+        get lastClickedCardIndex() {
+            return this._lastClickedCardIndex;
+        }
+
+        set lastClickedCardIndex(value) {
+            this._lastClickedCardIndex = value;
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: { 
+                    properties: { 
+                        lastClickedCardIndex: value 
+                    } 
+                }
+            }));
+        }
+
+        get programmKuerzel() {
+            return JSON.stringify(this._programmKuerzel);
+        }
+
+        set programmKuerzel(value) {
+            try {
+                this._programmKuerzel = typeof value === 'string' ? JSON.parse(value) : value;
+                this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                    detail: { properties: { programmKuerzel: JSON.stringify(this._programmKuerzel) } }
+                }));
+            } catch (e) {
+                console.error('Invalid programmKuerzel:', e);
+            }
+        }
+
+        get programmName() {
+            return JSON.stringify(this._programmName);
+        }
+
+        set programmName(value) {
+            try {
+                this._programmName = typeof value === 'string' ? JSON.parse(value) : value;
+                this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                    detail: { properties: { programmName: JSON.stringify(this._programmName) } }
+                }));
+            } catch (e) {
+                console.error('Invalid programmName:', e);
+            }
+        }
+
+        get programmStartEnd() {
+            return JSON.stringify(this._programmStartEnd);
+        }
+
+        set programmStartEnd(value) {
+            try {
+                this._programmStartEnd = typeof value === 'string' ? JSON.parse(value) : value;
+                this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                    detail: { properties: { programmStartEnd: JSON.stringify(this._programmStartEnd) } }
+                }));
+            } catch (e) {
+                console.error('Invalid programmStartEnd:', e);
+            }
+        }
+
+        get programmStatus() {
+            return JSON.stringify(this._programmStatus);
+        }
+
+        set programmStatus(value) {
+            try {
+                this._programmStatus = typeof value === 'string' ? JSON.parse(value) : value;
+                this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                    detail: { properties: { programmStatus: JSON.stringify(this._programmStatus) } }
+                }));
+            } catch (e) {
+                console.error('Invalid programmStatus:', e);
+            }
         }
 
         getButtonVisibility(buttonId) {
@@ -859,6 +1012,74 @@
                 return "success";
             }
             return "error";
+        }
+
+        // Dynamic setters for card data
+        setProgrammKuerzel(valuesArray) {
+            if (!Array.isArray(valuesArray)) return "error";
+            this._programmKuerzel = valuesArray;
+            this._updateCardDataByKey('programmKuerzel', valuesArray);
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: { properties: { programmKuerzel: JSON.stringify(valuesArray) } }
+            }));
+            return "success";
+        }
+
+        setProgrammName(valuesArray) {
+            if (!Array.isArray(valuesArray)) return "error";
+            this._programmName = valuesArray;
+            this._updateCardDataByKey('programmName', valuesArray);
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: { properties: { programmName: JSON.stringify(valuesArray) } }
+            }));
+            return "success";
+        }
+
+        setProgrammStartEnd(valuesArray) {
+            if (!Array.isArray(valuesArray)) return "error";
+            this._programmStartEnd = valuesArray;
+            this._updateCardDataByKey('programmStartEnd', valuesArray);
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: { properties: { programmStartEnd: JSON.stringify(valuesArray) } }
+            }));
+            return "success";
+        }
+
+        setProgrammStatus(valuesArray) {
+            if (!Array.isArray(valuesArray)) return "error";
+            this._programmStatus = valuesArray;
+            this._updateCardDataByKey('programmStatus', valuesArray);
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: { properties: { programmStatus: JSON.stringify(valuesArray) } }
+            }));
+            return "success";
+        }
+
+        _updateCardDataByKey(key, valuesArray) {
+            if (!this._cardData || this._cardData.length === 0) {
+                // Initialize card data if empty
+                this._cardData = valuesArray.map(value => ({
+                    [key]: value
+                }));
+            } else {
+                // Update existing card data
+                valuesArray.forEach((value, index) => {
+                    if (index < this._cardData.length) {
+                        this._cardData[index][key] = value;
+                    } else {
+                        // Add new card if array is longer
+                        this._cardData.push({ [key]: value });
+                    }
+                });
+            }
+            this._renderCards();
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: {
+                    properties: {
+                        cardData: JSON.stringify(this._cardData)
+                    }
+                }
+            }));
         }
     }
 
