@@ -1,0 +1,279 @@
+{
+  "name": "PlanifyIT Cards",
+  "description": "PlanifyIT Card Layout Widget with Dynamic Cards and Pagination",
+  "newInstancePrefix": "planifyit_card",
+  "eula": "",
+  "vendor": "Planifyit GmbH",
+  "license": "MIT",
+  "id": "planifyit_card",
+  "version": "1.0.0",
+  "icon": "https://planifyit.github.io/PlanifyitTAB/PlanifyIT_Logo2.png",
+  "webcomponents": [
+    {
+      "kind": "main",
+      "tag": "planifyit-card-widget",
+      "url": "https://planifyit.github.io/PlanifyitCard/planifyit-card-widget.js",
+      "integrity": ""
+    },
+    {
+      "kind": "styling",
+      "tag": "com-planifyit-card-styling",
+      "url": "https://planifyit.github.io/PlanifyitCard/style-panel-card.js",
+      "integrity": ""
+    }
+  ],
+  "properties": {
+    "headerTitle": {
+      "type": "string",
+      "description": "Title displayed in the card header",
+      "default": "Card View"
+    },
+    "appTitle": {
+      "type": "string",
+      "description": "Title displayed for the application",
+      "default": "PlanifyIT Cards"
+    },
+    "cardData": {
+      "type": "string",
+      "description": "JSON string of card data",
+      "default": "[]"
+    },
+    "cardRows": {
+      "type": "string",
+      "description": "JSON string defining card row configuration",
+      "default": "[]"
+    },
+    "selectedCardIndex": {
+      "type": "integer",
+      "description": "Index of the selected card",
+      "default": -1
+    },
+    "selectedCardData": {
+      "type": "string",
+      "description": "JSON string of selected card data",
+      "default": "{}"
+    },
+    "cardsPerPage": {
+      "type": "integer",
+      "description": "Number of cards to display per page",
+      "default": 12
+    },
+    "currentPage": {
+      "type": "integer",
+      "description": "Current page number",
+      "default": 1
+    },
+    "width": {
+      "type": "integer",
+      "default": 800
+    },
+    "height": {
+      "type": "integer",
+      "default": 600
+    },
+    "headerColor": {
+      "type": "string",
+      "description": "Color of the header",
+      "default": "#1a73e8"
+    },
+    "headerTextColor": {
+      "type": "string",
+      "description": "Text color for header",
+      "default": "#ffffff"
+    },
+    "cardBackgroundColor": {
+      "type": "string",
+      "description": "Background color of cards",
+      "default": "#ffffff"
+    },
+    "cardHoverColor": {
+      "type": "string",
+      "description": "Background color of hovered cards",
+      "default": "#f5f5f5"
+    },
+    "selectedCardColor": {
+      "type": "string",
+      "description": "Border color of selected card",
+      "default": "#1a73e8"
+    },
+    "dynamicButtons": {
+      "type": "string",
+      "description": "JSON string of dynamically created buttons",
+      "default": "[]"
+    },
+    "lastClickedButtonId": {
+      "type": "string",
+      "description": "ID of the last clicked button",
+      "default": ""
+    }
+  },
+  "methods": {
+    "getCardData": {
+      "returnType": "string",
+      "description": "Get the card data as a JSON string",
+      "parameters": [],
+      "body": "return this.cardData || '[]';"
+    },
+    "setCardData": {
+      "description": "Set the card data from a JSON string",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "string",
+          "description": "JSON string of card data"
+        }
+      ],
+      "body": "this.cardData = data;"
+    },
+    "getCardRows": {
+      "returnType": "string",
+      "description": "Get the card rows configuration as a JSON string",
+      "parameters": [],
+      "body": "return this.cardRows || '[]';"
+    },
+    "setCardRows": {
+      "description": "Set the card rows configuration from a JSON string",
+      "parameters": [
+        {
+          "name": "rows",
+          "type": "string",
+          "description": "JSON string of card row configurations"
+        }
+      ],
+      "body": "this.cardRows = rows;"
+    },
+    "getSelectedCardIndex": {
+      "returnType": "integer",
+      "description": "Get the index of the selected card",
+      "parameters": [],
+      "body": "return this.selectedCardIndex || -1;"
+    },
+    "setSelectedCardIndex": {
+      "description": "Set the selected card by index",
+      "parameters": [
+        {
+          "name": "index",
+          "type": "integer",
+          "description": "Index of the card to select"
+        }
+      ],
+      "body": "this.selectedCardIndex = index;"
+    },
+    "getSelectedCardData": {
+      "returnType": "string",
+      "description": "Get the data for the selected card as a JSON string",
+      "parameters": [],
+      "body": "return this.selectedCardData || '{}';"
+    },
+    "getSelectedCardValue": {
+      "returnType": "string",
+      "description": "Get a specific value from the selected card",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key of the value to retrieve"
+        }
+      ]
+    },
+    "getCardsPerPage": {
+      "returnType": "integer",
+      "description": "Get the number of cards displayed per page",
+      "parameters": [],
+      "body": "return this.cardsPerPage || 12;"
+    },
+    "setCardsPerPage": {
+      "description": "Set the number of cards to display per page",
+      "parameters": [
+        {
+          "name": "count",
+          "type": "integer",
+          "description": "Number of cards per page"
+        }
+      ],
+      "body": "this.cardsPerPage = count;"
+    },
+    "getCurrentPage": {
+      "returnType": "integer",
+      "description": "Get the current page number"
+    },
+    "getTotalPages": {
+      "returnType": "integer",
+      "description": "Get the total number of pages"
+    },
+    "goToPage": {
+      "returnType": "string",
+      "description": "Navigate to a specific page",
+      "parameters": [
+        {
+          "name": "pageNumber",
+          "type": "integer",
+          "description": "Page number to navigate to"
+        }
+      ]
+    },
+    "getDynamicButtons": {
+      "returnType": "string",
+      "description": "Get the dynamic buttons configuration as a JSON string",
+      "parameters": [],
+      "body": "return this.dynamicButtons || '[]';"
+    },
+    "getLastClickedButtonId": {
+      "returnType": "string",
+      "description": "Get the ID of the last clicked button",
+      "parameters": [],
+      "body": "return this.lastClickedButtonId || '';"
+    },
+    "getButtonVisibility": {
+      "returnType": "string",
+      "description": "Retrieve the visibility state of a button based on its ID",
+      "parameters": [
+        {
+          "name": "buttonId",
+          "type": "string",
+          "description": "The ID of the button to check visibility for"
+        }
+      ]
+    },
+    "setButtonVisibility": {
+      "returnType": "void",
+      "description": "Set the visibility state of a button based on its ID",
+      "parameters": [
+        {
+          "name": "buttonId",
+          "type": "string",
+          "description": "The ID of the button to update the visibility for"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "description": "The visibility state to set ('visible' or 'hidden')"
+        }
+      ]
+    }
+  },
+  "events": {
+    "onCardSelected": {
+      "description": "Called when a card is selected"
+    },
+    "onCustomButtonClicked": {
+      "description": "Called when a custom dynamic button is clicked"
+    }
+  },
+  "dataBindings": {
+    "cardDataBinding": {
+      "feeds": [
+        {
+          "id": "dimensions",
+          "description": "Dimensions",
+          "type": "dimension"
+        },
+        {
+          "id": "measures",
+          "description": "Measures",
+          "type": "mainStructureMember"
+        }
+      ]
+    }
+  }
+}
